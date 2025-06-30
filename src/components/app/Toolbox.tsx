@@ -35,6 +35,7 @@ import {
   Printer,
   Share2,
   FileUp,
+  Table2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -87,6 +88,7 @@ const insertTools = [
 
 const dataTools = [
     { icon: Filter, name: "Filter Data" },
+    { icon: Table2, name: "Pivot Table" },
     { icon: PaintBucket, name: "Conditional Formatting" },
     { icon: ArrowDownUp, name: "Sort Data" },
     { icon: ListX, name: "Remove Duplicates" },

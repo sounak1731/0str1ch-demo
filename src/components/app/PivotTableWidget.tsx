@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useRef, useEffect } from "react";
@@ -60,16 +61,22 @@ export function PivotTableWidget({ data, artifactName, onRename }: PivotTableWid
         return { headers: [], rows: [] };
     }
     
-    const products = [...new Set(data.map(item => item.product.trim()))].sort();
-    const regions = [...new Set(data.map(item => item.region.trim().charAt(0).toUpperCase() + item.region.slice(1).toLowerCase()))].sort();
+    const normalizeProductName = (name: string) =>
+      name.trim().split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+
+    const normalizeRegionName = (name: string) => 
+      name.trim().charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+
+    const products = [...new Set(data.map(item => normalizeProductName(item.product)))].sort();
+    const regions = [...new Set(data.map(item => normalizeRegionName(item.region)))].sort();
     
     const pivoted = products.map(product => {
         const row: { product: string; [key: string]: number | string } = { product };
         let total = 0;
         regions.forEach(region => {
             const sales = data.filter(d => 
-                d.product.trim() === product && 
-                (d.region.trim().charAt(0).toUpperCase() + d.region.slice(1).toLowerCase()) === region
+                normalizeProductName(d.product) === product && 
+                normalizeRegionName(d.region) === region
             );
             const regionRevenue = sales.reduce((sum, sale) => sum + sale.revenue, 0);
             row[region] = regionRevenue;
