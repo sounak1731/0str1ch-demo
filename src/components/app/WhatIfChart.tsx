@@ -56,6 +56,7 @@ export function WhatIfChart({ data, artifactName, onRename }: WhatIfChartProps) 
   }, [artifactName]);
   
   const getOption = (chartData: WhatIfScenario[]) => ({
+    color: ['hsl(var(--chart-4))', 'hsl(var(--chart-3))', 'hsl(var(--chart-5))'],
     tooltip: { trigger: 'axis', axisPointer: { type: 'cross', label: { backgroundColor: '#6a7985' } } },
     legend: {
       data: ['Optimistic', 'Neutral', 'Pessimistic'],
@@ -81,7 +82,6 @@ export function WhatIfChart({ data, artifactName, onRename }: WhatIfChartProps) 
         showSymbol: false,
         areaStyle: {
           opacity: 0.8,
-          color: 'hsl(var(--chart-1))',
         },
         emphasis: { focus: 'series' },
         data: chartData.map(d => d.optimistic),
@@ -95,7 +95,6 @@ export function WhatIfChart({ data, artifactName, onRename }: WhatIfChartProps) 
         showSymbol: false,
         areaStyle: {
           opacity: 0.8,
-          color: 'hsl(var(--chart-3))'
         },
         emphasis: { focus: 'series' },
         data: chartData.map(d => d.neutral),
@@ -109,7 +108,6 @@ export function WhatIfChart({ data, artifactName, onRename }: WhatIfChartProps) 
         showSymbol: false,
         areaStyle: {
           opacity: 0.8,
-          color: 'hsl(var(--chart-5))',
         },
         emphasis: { focus: 'series' },
         data: chartData.map(d => d.pessimistic),
@@ -124,7 +122,7 @@ export function WhatIfChart({ data, artifactName, onRename }: WhatIfChartProps) 
     <Card className="shadow-sm flex flex-col h-full">
       <CardHeader>
         <div className="flex justify-between items-start">
-            <div>
+            <div className="no-drag">
               {isRenaming ? (
                 <Input
                   ref={inputRef}
@@ -142,7 +140,7 @@ export function WhatIfChart({ data, artifactName, onRename }: WhatIfChartProps) 
               <CardDescription>Projected revenue under different growth scenarios.</CardDescription>
             </div>
             <ThreadPopover comments={mockComments}>
-                <Button variant="ghost" size="icon" aria-label="View Comments">
+                <Button variant="ghost" size="icon" aria-label="View Comments" className="no-drag">
                     <MessageSquare className="h-5 w-5 text-muted-foreground" />
                 </Button>
             </ThreadPopover>

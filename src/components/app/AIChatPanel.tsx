@@ -40,8 +40,8 @@ const DEMO_SCRIPT = [
   "Given our current CAC and marketing spend, can you generate a 3-month revenue forecast based on this data?",
   "Thanks. What if we increased marketing spend by 20%? Show me a what-if analysis for that.",
   "Okay, we ran an A/B test on the new checkout flow. Can you show me which variant performed better, considering both conversion rate and the cost per conversion?",
-  "Finally, let's set up an automated workflow to sync this data with Salesforce.",
-  "This is a powerful dashboard. Can I switch to a faster AI model if I need to?",
+  "Finally, let's set up an automated workflow to sync this data with Salesforce. Add it to the canvas.",
+  "This is powerful. I see I can configure the workflow. Can I switch to a faster AI model if I need to?",
 ];
 
 const initialMessages: ChatMessage[] = [
@@ -161,7 +161,7 @@ export function AIChatPanel({ open, onClose, onForecast, onAnalyze, onReset, isL
                   <button
                     onClick={() => handleSend(DEMO_SCRIPT[demoStep])}
                     disabled={isCurrentlyLoading}
-                    className="w-full text-left p-3 rounded-lg bg-muted hover:bg-accent/20 transition-colors disabled:opacity-50 flex items-center gap-3"
+                    className="w-full text-left p-3 rounded-lg bg-muted hover:bg-accent/20 transition-colors disabled:opacity-50 flex items-center gap-3 no-drag"
                   >
                     <p className="text-sm flex-1">{DEMO_SCRIPT[demoStep]}</p>
                     <Send className="h-4 w-4 text-primary" />
@@ -185,13 +185,14 @@ export function AIChatPanel({ open, onClose, onForecast, onAnalyze, onReset, isL
                       onChange={(e) => setInputValue(e.target.value)}
                       onKeyPress={(e) => e.key === 'Enter' && handleSend(inputValue)}
                       disabled={isCurrentlyLoading}
+                      className="no-drag"
                   />
-                  <Button onClick={() => handleSend(inputValue)} disabled={isCurrentlyLoading || !inputValue.trim()}><Send className="h-4 w-4" /></Button>
+                  <Button onClick={() => handleSend(inputValue)} disabled={isCurrentlyLoading || !inputValue.trim()} className="no-drag"><Send className="h-4 w-4" /></Button>
               </div>
               <div className="flex items-center justify-center text-xs text-muted-foreground mt-2 gap-2">
                 <span>Powered by</span>
                 <Select value={selectedModel} onValueChange={setSelectedModel}>
-                  <SelectTrigger className="h-6 text-xs w-auto border-0 bg-transparent p-1 focus:ring-0 focus-visible:ring-offset-0 focus-visible:ring-0 shadow-none">
+                  <SelectTrigger className="h-6 text-xs w-auto border-0 bg-transparent p-1 focus:ring-0 focus-visible:ring-offset-0 focus-visible:ring-0 shadow-none no-drag">
                     <SelectValue placeholder="Select model" />
                   </SelectTrigger>
                   <SelectContent>

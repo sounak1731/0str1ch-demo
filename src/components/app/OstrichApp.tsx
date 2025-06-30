@@ -602,7 +602,6 @@ export default function OstrichApp({
               width={2400}
               className="layout"
               onLayoutChange={handleLayoutChange}
-              containerPadding={[32, 80]}
               draggableCancel=".no-drag, [data-context-menu-trigger]"
             >
               {(activeLayouts.lg || []).map(layout => {
@@ -697,8 +696,8 @@ export default function OstrichApp({
                       type: 'line',
                       smooth: true,
                       data: forecast.map(f => f.revenue),
-                      lineStyle: { color: 'hsl(var(--primary))', width: 2 },
-                      itemStyle: { color: 'hsl(var(--primary))' }
+                      lineStyle: { color: 'hsl(var(--chart-1))', width: 2 },
+                      itemStyle: { color: 'hsl(var(--chart-1))' }
                     }],
                     grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
                     textStyle: { fontFamily: 'Inter, sans-serif' }
@@ -706,7 +705,7 @@ export default function OstrichApp({
                   return (
                      <div key="forecast">
                         <Card className="h-full flex flex-col">
-                          <CardHeader>
+                          <CardHeader className="no-drag">
                             <CardTitle>3-Month Revenue Forecast</CardTitle>
                             <CardDescription>Forecasted sales data based on historical performance.</CardDescription>
                           </CardHeader>
@@ -727,7 +726,7 @@ export default function OstrichApp({
 
        <Dialog open={!!expandedKpi} onOpenChange={(isOpen) => !isOpen && setExpandedKpi(null)}>
         <DialogContent className="max-w-2xl h-[450px] flex flex-col">
-          <DialogHeader>
+          <DialogHeader className="no-drag">
             <div className="flex justify-between items-start">
               <div>
                 <DialogTitle>{expandedKpi?.title}</DialogTitle>

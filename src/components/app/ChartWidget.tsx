@@ -60,7 +60,7 @@ export function ChartWidget({ data, previousData, artifactName, onRename }: Char
   
   const processDataForChart = (chartData: Sale[]) => {
     const revenueByRegion = chartData.reduce((acc, sale) => {
-      const regionName = sale.region.trim().toLowerCase();
+      const regionName = sale.region.trim();
       const region = regionName.charAt(0).toUpperCase() + regionName.slice(1);
       acc[region] = (acc[region] || 0) + sale.revenue;
       return acc;
@@ -117,7 +117,7 @@ export function ChartWidget({ data, previousData, artifactName, onRename }: Char
     <Card className="shadow-sm flex flex-col h-full">
       <CardHeader>
         <div className="flex justify-between items-start">
-          <div>
+          <div className="no-drag">
             {isRenaming ? (
               <Input
                 ref={inputRef}
@@ -135,7 +135,7 @@ export function ChartWidget({ data, previousData, artifactName, onRename }: Char
             <CardDescription>Total sales revenue for each region.</CardDescription>
           </div>
           <ThreadPopover comments={mockComments}>
-             <Button variant="ghost" size="icon" aria-label="View Comments">
+             <Button variant="ghost" size="icon" aria-label="View Comments" className="no-drag">
                 <MessageSquare className="h-5 w-5 text-muted-foreground" />
              </Button>
           </ThreadPopover>
@@ -143,7 +143,7 @@ export function ChartWidget({ data, previousData, artifactName, onRename }: Char
       </CardHeader>
       <CardContent className="flex-1 pb-4 min-h-0">
         {previousChartData ? (
-          <Tabs defaultValue="current" className="w-full h-full flex flex-col">
+          <Tabs defaultValue="current" className="w-full h-full flex flex-col no-drag">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="current">Current</TabsTrigger>
               <TabsTrigger value="previous">Previous</TabsTrigger>
