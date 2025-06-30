@@ -616,7 +616,7 @@ export default function OstrichApp({
                   const kpi = kpiMap[i as keyof typeof kpiMap];
                   if (!kpi) return null;
                   return (
-                    <div key={i} onClick={() => setExpandedKpi({ title: kpi.title, data: kpi.data })} className="cursor-pointer">
+                    <div key={i} onClick={() => setExpandedKpi({ title: kpi.title, data: kpi.data })} className="cursor-pointer no-drag">
                       <KpiCard
                         title={kpi.title}
                         value={kpi.value}
@@ -639,7 +639,7 @@ export default function OstrichApp({
                       <SpreadsheetCanvas
                         artifactName={artifactNames.spreadsheet}
                         onRename={(newName) => handleRenameArtifact('spreadsheet', newName)}
-                        data={salesData}
+                        data={filteredSalesData}
                         highlightHighRevenue={highlightHighRevenue}
                         onAddRow={handleAddRow}
                         onContextualChat={handleContextualChat}
