@@ -122,15 +122,13 @@ export function AIChatPanel({ open, onClose, onForecast, onAnalyze, onReset, isL
                     <div
                         key={index}
                         className={`flex items-start gap-3 ${
-                        msg.sender === "user" ? "justify-end" : "justify-start"
+                        msg.sender === "user" ? "flex-row-reverse" : ""
                         }`}
                     >
-                        {msg.sender === "ai" && (
                         <Avatar className="h-8 w-8">
-                            <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="robot" />
-                            <AvatarFallback>AI</AvatarFallback>
+                            <AvatarImage src={`https://placehold.co/40x40.png`} data-ai-hint={msg.sender === 'user' ? 'person user' : 'robot'} />
+                            <AvatarFallback>{msg.sender === 'user' ? 'ME' : 'AI'}</AvatarFallback>
                         </Avatar>
-                        )}
                         <div
                         className={`max-w-md rounded-2xl px-4 py-2.5 text-sm whitespace-pre-wrap ${
                             msg.sender === "user"
@@ -140,12 +138,6 @@ export function AIChatPanel({ open, onClose, onForecast, onAnalyze, onReset, isL
                         >
                             {msg.text}
                         </div>
-                        {msg.sender === "user" && (
-                        <Avatar className="h-8 w-8">
-                            <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="person user" />
-                            <AvatarFallback>ME</AvatarFallback>
-                        </Avatar>
-                        )}
                     </div>
                     ))}
                     {isCurrentlyLoading && (
