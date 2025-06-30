@@ -41,13 +41,11 @@ export function ArtifactConnector({ from, to, direction = 'horizontal' }: Artifa
       <path
         d={pathData}
         stroke="hsl(var(--primary))"
-        strokeWidth="2"
+        strokeWidth="3"
         fill="none"
-        strokeDasharray="4 4"
-        className="connector-path"
       />
-      <circle cx={from.x} cy={from.y} r="5" fill="hsl(var(--primary))" />
-      <circle cx={to.x} cy={to.y} r="5" fill="hsl(var(--primary))" />
+      <circle cx={from.x} cy={from.y} r="6" fill="hsl(var(--primary))" />
+      <circle cx={to.x} cy={to.y} r="6" fill="hsl(var(--primary))" />
     </svg>
   );
 }

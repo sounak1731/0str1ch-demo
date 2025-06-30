@@ -56,14 +56,3 @@ body {
   background-image: radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px);
   background-size: 20px 20px;
 }
-
-@keyframes dash {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-.connector-path {
-  stroke-dashoffset: 8;
-  animation: dash 1s linear infinite;
-}
