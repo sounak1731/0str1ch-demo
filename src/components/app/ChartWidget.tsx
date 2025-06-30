@@ -6,8 +6,7 @@ import type { Sale, Comment } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { MessageSquare } from "lucide-react";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { Bar, BarChart, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import ReactECharts from 'echarts-for-react';
 import { ThreadPopover } from "./ThreadPopover";
 import { Button } from "../ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,13 +18,6 @@ interface ChartWidgetProps {
   artifactName: string;
   onRename: (newName: string) => void;
 }
-
-const chartConfig = {
-  revenue: {
-    label: "Revenue",
-    color: "hsl(var(--chart-2))",
-  },
-} satisfies ChartConfig;
 
 export const mockComments: Comment[] = [
     { id: 'c3', user: 'Jane Doe', avatarFallback: 'JD', text: 'Great numbers for the East region! Let\'s double down.', resolved: false },
@@ -68,7 +60,8 @@ export function ChartWidget({ data, previousData, artifactName, onRename }: Char
   
   const processDataForChart = (chartData: Sale[]) => {
     const revenueByRegion = chartData.reduce((acc, sale) => {
-      const region = sale.region.charAt(0).toUpperCase() + sale.region.slice(1).toLowerCase();
+      const regionName = sale.region.trim().toLowerCase();
+      const region = regionName.charAt(0).toUpperCase() + regionName.slice(1);
       acc[region] = (acc[region] || 0) + sale.revenue;
       return acc;
     }, {} as Record<string, number>);
@@ -81,44 +74,43 @@ export function ChartWidget({ data, previousData, artifactName, onRename }: Char
 
   const currentChartData = useMemo(() => processDataForChart(data), [data]);
   const previousChartData = useMemo(() => previousData ? processDataForChart(previousData) : null, [previousData]);
+  
+  const getOption = (chartData: { region: string; revenue: number }[]) => ({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+    grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+    xAxis: {
+      type: 'category',
+      data: chartData.map((d) => d.region),
+      axisTick: { show: false },
+      axisLine: { show: false },
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { formatter: (value: number) => `$${value / 1000}k` },
+      splitLine: { lineStyle: { type: 'dashed' } },
+    },
+    series: [{
+      name: 'Revenue',
+      type: 'bar',
+      barWidth: '60%',
+      data: chartData.map((d) => d.revenue),
+      itemStyle: {
+        borderRadius: [5, 5, 0, 0],
+        color: 'hsl(var(--chart-2))',
+      },
+    }],
+    textStyle: {
+        fontFamily: 'Inter, sans-serif'
+    }
+  });
 
   const renderChart = (d: { region: string; revenue: number }[]) => (
-    <ResponsiveContainer width="100%" height="100%">
-        <ChartContainer config={chartConfig} className="w-full h-full">
-        <BarChart 
-            accessibilityLayer 
-            data={d} 
-            margin={{ top: 20, right: 20, left: 0, bottom: 5 }}
-            barCategoryGap="20%"
-        >
-            <XAxis 
-                dataKey="region" 
-                tickLine={false} 
-                axisLine={false} 
-                tickMargin={10} 
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-            />
-            <YAxis 
-                tickLine={false} 
-                axisLine={false} 
-                tickFormatter={(value) => `$${Number(value) / 1000}k`} 
-                tickMargin={10}
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-            />
-            <ChartTooltip
-                cursor={{ fill: 'hsl(var(--accent))', opacity: 0.1, radius: 'var(--radius)' }}
-                content={<ChartTooltipContent 
-                    indicator="dot"
-                    labelClassName="font-bold"
-                    className="rounded-lg shadow-lg border-border/50 bg-background" 
-                />}
-            />
-            <Bar dataKey="revenue" fill="var(--color-revenue)" radius={[5, 5, 0, 0]} />
-        </BarChart>
-        </ChartContainer>
-    </ResponsiveContainer>
+    <ReactECharts
+        option={getOption(d)}
+        style={{ height: '100%', width: '100%' }}
+        notMerge={true}
+        lazyUpdate={true}
+    />
   );
 
   return (

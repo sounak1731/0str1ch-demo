@@ -11,7 +11,7 @@ import { ChartWidget, mockComments as chartComments } from "@/components/app/Cha
 import { AIChatPanel } from "@/components/app/AIChatPanel";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BarChart as RechartsBarChart, Bar, AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import ReactECharts from 'echarts-for-react';
 import { ABTestWidget, mockComments as abTestComments } from "./ABTestWidget";
 import { WhatIfChart, mockComments as whatIfComments } from "./WhatIfChart";
 import { ZoomControls } from "./ZoomControls";
@@ -616,7 +616,11 @@ export default function OstrichApp({
                   const kpi = kpiMap[i as keyof typeof kpiMap];
                   if (!kpi) return null;
                   return (
-                    <div key={i} onClick={() => setExpandedKpi({ title: kpi.title, data: kpi.data })} className="cursor-pointer no-drag">
+                    <div key={i} onClick={(e) => {
+                      if (e.detail === 1) { // Prevents firing on double-click
+                        setExpandedKpi({ title: kpi.title, data: kpi.data })
+                      }
+                    }} className="cursor-pointer no-drag">
                       <KpiCard
                         title={kpi.title}
                         value={kpi.value}
@@ -684,6 +688,21 @@ export default function OstrichApp({
                   );
                 }
                 if (i === "forecast" && forecast) {
+                  const forecastOption = {
+                    tooltip: { trigger: 'axis' },
+                    xAxis: { type: 'category', data: forecast.map(f => f.month) },
+                    yAxis: { type: 'value', axisLabel: { formatter: (v: number) => `$${v / 1000}k` } },
+                    series: [{
+                      name: 'Forecasted Revenue',
+                      type: 'line',
+                      smooth: true,
+                      data: forecast.map(f => f.revenue),
+                      lineStyle: { color: 'hsl(var(--primary))', width: 2 },
+                      itemStyle: { color: 'hsl(var(--primary))' }
+                    }],
+                    grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
+                    textStyle: { fontFamily: 'Inter, sans-serif' }
+                  };
                   return (
                      <div key="forecast">
                         <Card className="h-full flex flex-col">
@@ -692,22 +711,7 @@ export default function OstrichApp({
                             <CardDescription>Forecasted sales data based on historical performance.</CardDescription>
                           </CardHeader>
                           <CardContent className="flex-1 -m-2">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <LineChart data={forecast}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                                <XAxis dataKey="month" />
-                                <YAxis tickFormatter={(value) => `$${Number(value) / 1000}k`} />
-                                <Tooltip 
-                                  contentStyle={{
-                                    background: 'hsl(var(--background))',
-                                    border: '1px solid hsl(var(--border))',
-                                    borderRadius: 'var(--radius)',
-                                  }}
-                                />
-                                <Legend />
-                                <Line type="monotone" dataKey="revenue" stroke="hsl(var(--primary))" strokeWidth={2} name="Forecasted Revenue" dot={{ r: 4 }} activeDot={{ r: 6 }} />
-                              </LineChart>
-                            </ResponsiveContainer>
+                             <ReactECharts option={forecastOption} style={{ height: '100%', width: '100%' }} />
                           </CardContent>
                         </Card>
                       </div>
@@ -721,7 +725,7 @@ export default function OstrichApp({
         </div>
       </div>
 
-      <Dialog open={!!expandedKpi} onOpenChange={(isOpen) => !isOpen && setExpandedKpi(null)}>
+       <Dialog open={!!expandedKpi} onOpenChange={(isOpen) => !isOpen && setExpandedKpi(null)}>
         <DialogContent className="max-w-2xl h-[450px] flex flex-col">
           <DialogHeader>
             <div className="flex justify-between items-start">
@@ -739,36 +743,38 @@ export default function OstrichApp({
             </div>
           </DialogHeader>
           <div className="flex-1 -mx-6 -mb-6 mt-4">
-            {expandedKpi && (
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={expandedKpi.data} margin={{ top: 5, right: 30, left: -20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis
-                    tickFormatter={(value) =>
-                      expandedKpi.title.includes("Revenue") || expandedKpi.title.includes("Value")
-                        ? `$${(Number(value) / 1000).toFixed(0)}k`
-                        : value.toLocaleString()
+            {expandedKpi && (() => {
+                const kpiOption = {
+                  tooltip: { trigger: 'axis' },
+                  grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+                  xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: expandedKpi.data.map(d => d.name)
+                  },
+                  yAxis: {
+                    type: 'value',
+                    axisLabel: {
+                      formatter: (value: number) =>
+                        expandedKpi.title.includes("Revenue") || expandedKpi.title.includes("Value")
+                          ? `$${(Number(value) / 1000).toFixed(0)}k`
+                          : value.toLocaleString()
                     }
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: 'hsl(var(--background))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: 'var(--radius)',
-                    }}
-                    formatter={(value: number) => [
-                      expandedKpi.title.includes("Revenue") || expandedKpi.title.includes("Value")
-                        ? value.toLocaleString("en-US", { style: "currency", currency: "USD", minimumFractionDigits: 0, maximumFractionDigits: 0 })
-                        : value.toLocaleString(),
-                      "Value"
-                    ]}
-                  />
-                  <Legend />
-                  <Area type="monotone" dataKey="value" name={expandedKpi.title} stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.2} strokeWidth={2} dot={false} />
-                </AreaChart>
-              </ResponsiveContainer>
-            )}
+                  },
+                  series: [{
+                    name: expandedKpi.title,
+                    type: 'line',
+                    smooth: true,
+                    symbol: 'none',
+                    areaStyle: { color: 'hsl(var(--primary))', opacity: 0.2 },
+                    lineStyle: { color: 'hsl(var(--primary))', width: 2 },
+                    itemStyle: { color: 'hsl(var(--primary))' },
+                    data: expandedKpi.data.map(d => d.value)
+                  }],
+                  textStyle: { fontFamily: 'Inter, sans-serif' }
+                };
+                return <ReactECharts option={kpiOption} style={{ height: '100%', width: '100%' }} />;
+            })()}
           </div>
         </DialogContent>
       </Dialog>

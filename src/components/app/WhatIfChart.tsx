@@ -5,8 +5,7 @@ import { useState, useRef, useEffect } from "react";
 import type { WhatIfScenario, Comment } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig, ChartLegend, ChartLegendContent } from "@/components/ui/chart";
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer } from "recharts";
+import ReactECharts from 'echarts-for-react';
 import { ThreadPopover } from "./ThreadPopover";
 import { Button } from "../ui/button";
 import { MessageSquare } from "lucide-react";
@@ -16,12 +15,6 @@ interface WhatIfChartProps {
   artifactName: string;
   onRename: (newName: string) => void;
 }
-
-const chartConfig = {
-  pessimistic: { label: "Pessimistic", color: "hsl(var(--chart-5))" },
-  neutral: { label: "Neutral", color: "hsl(var(--chart-3))" },
-  optimistic: { label: "Optimistic", color: "hsl(var(--chart-1))" },
-} satisfies ChartConfig;
 
 export const mockComments: Comment[] = [
     { id: 'c7', user: 'CFO', avatarFallback: 'CFO', text: 'Let\'s plan for the neutral scenario but be prepared for the pessimistic case.', resolved: false },
@@ -61,6 +54,71 @@ export function WhatIfChart({ data, artifactName, onRename }: WhatIfChartProps) 
   useEffect(() => {
     setDraftName(artifactName);
   }, [artifactName]);
+  
+  const getOption = (chartData: WhatIfScenario[]) => ({
+    tooltip: { trigger: 'axis', axisPointer: { type: 'cross', label: { backgroundColor: '#6a7985' } } },
+    legend: {
+      data: ['Optimistic', 'Neutral', 'Pessimistic'],
+      bottom: 0,
+    },
+    grid: { left: '3%', right: '4%', bottom: '10%', top: '5%', containLabel: true },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: chartData.map(d => d.name),
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { formatter: (value: number) => `$${value / 1000}k` },
+    },
+    series: [
+      {
+        name: 'Optimistic',
+        type: 'line',
+        stack: 'Total',
+        smooth: true,
+        lineStyle: { width: 0 },
+        showSymbol: false,
+        areaStyle: {
+          opacity: 0.8,
+          color: 'hsl(var(--chart-1))',
+        },
+        emphasis: { focus: 'series' },
+        data: chartData.map(d => d.optimistic),
+      },
+      {
+        name: 'Neutral',
+        type: 'line',
+        stack: 'Total',
+        smooth: true,
+        lineStyle: { width: 0 },
+        showSymbol: false,
+        areaStyle: {
+          opacity: 0.8,
+          color: 'hsl(var(--chart-3))'
+        },
+        emphasis: { focus: 'series' },
+        data: chartData.map(d => d.neutral),
+      },
+      {
+        name: 'Pessimistic',
+        type: 'line',
+        stack: 'Total',
+        smooth: true,
+        lineStyle: { width: 0 },
+        showSymbol: false,
+        areaStyle: {
+          opacity: 0.8,
+          color: 'hsl(var(--chart-5))',
+        },
+        emphasis: { focus: 'series' },
+        data: chartData.map(d => d.pessimistic),
+      },
+    ],
+    textStyle: {
+      fontFamily: 'Inter, sans-serif'
+    }
+  });
 
   return (
     <Card className="shadow-sm flex flex-col h-full">
@@ -91,62 +149,10 @@ export function WhatIfChart({ data, artifactName, onRename }: WhatIfChartProps) 
         </div>
       </CardHeader>
       <CardContent className="flex-1 pb-4 min-h-0">
-        <ResponsiveContainer width="100%" height="100%">
-            <ChartContainer config={chartConfig} className="w-full h-full">
-            <AreaChart
-              accessibilityLayer
-              data={data}
-              margin={{
-                left: 12,
-                right: 12,
-              }}
-            >
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="name"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tickFormatter={(value) => value.slice(0, 3)}
-              />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-                tickFormatter={(value) => `$${Number(value) / 1000}k`}
-              />
-              <ChartTooltip
-                cursor={false}
-                content={<ChartTooltipContent indicator="dot" />}
-              />
-              <ChartLegend content={<ChartLegendContent />} />
-              <Area
-                dataKey="optimistic"
-                type="natural"
-                fill="var(--color-optimistic)"
-                fillOpacity={0.4}
-                stroke="var(--color-optimistic)"
-                stackId="a"
-              />
-              <Area
-                dataKey="neutral"
-                type="natural"
-                fill="var(--color-neutral)"
-                fillOpacity={0.4}
-                stroke="var(--color-neutral)"
-                stackId="a"
-              />
-              <Area
-                dataKey="pessimistic"
-                type="natural"
-                fill="var(--color-pessimistic)"
-                fillOpacity={0.4}
-                stroke="var(--color-pessimistic)"
-                stackId="a"
-              />
-            </AreaChart>
-            </ChartContainer>
-        </ResponsiveContainer>
+        <ReactECharts
+            option={getOption(data)}
+            style={{ height: '100%', width: '100%' }}
+        />
       </CardContent>
     </Card>
   );
