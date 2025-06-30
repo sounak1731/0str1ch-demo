@@ -694,6 +694,7 @@ export default function OstrichApp({
                 }
                 if (i === "forecast" && forecast) {
                   const forecastOption = {
+                    color: ['#5470C6', '#91CC75', '#EE6666', '#FAC858', '#73C0DE'],
                     tooltip: { trigger: 'axis' },
                     xAxis: { type: 'category', data: forecast.map(f => f.month) },
                     yAxis: { type: 'value', axisLabel: { formatter: (v: number) => `$${v / 1000}k` } },
@@ -702,8 +703,7 @@ export default function OstrichApp({
                       type: 'line',
                       smooth: true,
                       data: forecast.map(f => f.revenue),
-                      lineStyle: { color: 'hsl(var(--chart-1))', width: 2 },
-                      itemStyle: { color: 'hsl(var(--chart-1))' }
+                      lineStyle: { width: 2 },
                     }],
                     grid: { left: '3%', right: '4%', bottom: '3%', top: '15%', containLabel: true },
                     textStyle: { fontFamily: 'Inter, sans-serif' }
@@ -750,6 +750,7 @@ export default function OstrichApp({
           <div className="flex-1 -mx-6 -mb-6 mt-4">
             {expandedKpi && (() => {
                 const kpiOption = {
+                  color: ['#5470C6', '#91CC75', '#EE6666', '#FAC858', '#73C0DE'],
                   tooltip: { trigger: 'axis' },
                   grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
                   xAxis: {
@@ -771,9 +772,8 @@ export default function OstrichApp({
                     type: 'line',
                     smooth: true,
                     symbol: 'none',
-                    areaStyle: { color: 'hsl(var(--primary))', opacity: 0.2 },
-                    lineStyle: { color: 'hsl(var(--primary))', width: 2 },
-                    itemStyle: { color: 'hsl(var(--primary))' },
+                    areaStyle: { opacity: 0.2 },
+                    lineStyle: { width: 2 },
                     data: expandedKpi.data.map(d => d.value)
                   }],
                   textStyle: { fontFamily: 'Inter, sans-serif' }

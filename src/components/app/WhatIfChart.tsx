@@ -56,7 +56,7 @@ export function WhatIfChart({ data, artifactName, onRename }: WhatIfChartProps) 
   }, [artifactName]);
   
   const getOption = (chartData: WhatIfScenario[]) => ({
-    color: ['hsl(var(--chart-4))', 'hsl(var(--chart-3))', 'hsl(var(--chart-5))'],
+    color: ['#91CC75', '#FAC858', '#EE6666'],
     tooltip: { trigger: 'axis', axisPointer: { type: 'cross', label: { backgroundColor: '#6a7985' } } },
     legend: {
       data: ['Optimistic', 'Neutral', 'Pessimistic'],

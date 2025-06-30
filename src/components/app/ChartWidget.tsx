@@ -76,13 +76,7 @@ export function ChartWidget({ data, previousData, artifactName, onRename }: Char
   const previousChartData = useMemo(() => previousData ? processDataForChart(previousData) : null, [previousData]);
   
   const getOption = (chartData: { region: string; revenue: number }[]) => {
-    const chartColors = [
-        'hsl(var(--chart-1))', 
-        'hsl(var(--chart-2))', 
-        'hsl(var(--chart-3))', 
-        'hsl(var(--chart-4))', 
-        'hsl(var(--chart-5))'
-    ];
+    const chartColors = ['#5470C6', '#91CC75', '#FAC858', '#EE6666', '#73C0DE'];
 
     return {
         tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
