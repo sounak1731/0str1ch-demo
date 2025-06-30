@@ -60,7 +60,7 @@ export function ChartWidget({ data, previousData, artifactName, onRename }: Char
   
   const processDataForChart = (chartData: Sale[]) => {
     const revenueByRegion = chartData.reduce((acc, sale) => {
-      const regionName = sale.region.trim();
+      const regionName = sale.region.trim().toLowerCase();
       const region = regionName.charAt(0).toUpperCase() + regionName.slice(1);
       acc[region] = (acc[region] || 0) + sale.revenue;
       return acc;
@@ -75,34 +75,46 @@ export function ChartWidget({ data, previousData, artifactName, onRename }: Char
   const currentChartData = useMemo(() => processDataForChart(data), [data]);
   const previousChartData = useMemo(() => previousData ? processDataForChart(previousData) : null, [previousData]);
   
-  const getOption = (chartData: { region: string; revenue: number }[]) => ({
-    tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-    grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
-    xAxis: {
-      type: 'category',
-      data: chartData.map((d) => d.region),
-      axisTick: { show: false },
-      axisLine: { show: false },
-    },
-    yAxis: {
-      type: 'value',
-      axisLabel: { formatter: (value: number) => `$${value / 1000}k` },
-      splitLine: { lineStyle: { type: 'dashed' } },
-    },
-    series: [{
-      name: 'Revenue',
-      type: 'bar',
-      barWidth: '60%',
-      data: chartData.map((d) => d.revenue),
-      itemStyle: {
-        borderRadius: [5, 5, 0, 0],
-        color: 'hsl(var(--chart-2))',
-      },
-    }],
-    textStyle: {
-        fontFamily: 'Inter, sans-serif'
-    }
-  });
+  const getOption = (chartData: { region: string; revenue: number }[]) => {
+    const chartColors = [
+        'hsl(var(--chart-1))', 
+        'hsl(var(--chart-2))', 
+        'hsl(var(--chart-3))', 
+        'hsl(var(--chart-4))', 
+        'hsl(var(--chart-5))'
+    ];
+
+    return {
+        tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+        grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+        xAxis: {
+        type: 'category',
+        data: chartData.map((d) => d.region),
+        axisTick: { show: false },
+        axisLine: { show: false },
+        },
+        yAxis: {
+        type: 'value',
+        axisLabel: { formatter: (value: number) => `$${value / 1000}k` },
+        splitLine: { lineStyle: { type: 'dashed' } },
+        },
+        series: [{
+        name: 'Revenue',
+        type: 'bar',
+        barWidth: '60%',
+        data: chartData.map((d, index) => ({
+            value: d.revenue,
+            itemStyle: {
+                color: chartColors[index % chartColors.length],
+                borderRadius: [5, 5, 0, 0]
+            }
+        })),
+        }],
+        textStyle: {
+            fontFamily: 'Inter, sans-serif'
+        }
+    };
+  };
 
   const renderChart = (d: { region: string; revenue: number }[]) => (
     <ReactECharts
@@ -142,7 +154,7 @@ export function ChartWidget({ data, previousData, artifactName, onRename }: Char
         </div>
       </CardHeader>
       <CardContent className="flex-1 pb-4 min-h-0">
-        {previousChartData ? (
+        {previousData ? (
           <Tabs defaultValue="current" className="w-full h-full flex flex-col no-drag">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="current">Current</TabsTrigger>
