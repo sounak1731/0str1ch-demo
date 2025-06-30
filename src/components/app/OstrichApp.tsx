@@ -32,9 +32,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { ArtifactConnector } from "./ArtifactConnector";
 import { ThreadPopover } from "./ThreadPopover";
 import { Input } from "../ui/input";
+import { PivotTableWidget, mockComments as pivotComments } from "./PivotTableWidget";
 
 interface OstrichAppProps {
   initialSalesData: Sale[];
@@ -55,6 +55,7 @@ const fullLayouts: Layouts = {
     { i: "ab-test", x: 12, y: 13, w: 12, h: 8, minW: 6, minH: 6, isDraggable: true, isResizable: true },
     { i: "what-if", x: 12, y: 21, w: 12, h: 11, minW: 6, minH: 8, isDraggable: true, isResizable: true },
     { i: "forecast", x: 0, y: 16, w: 12, h: 7, minW: 8, minH: 6, isDraggable: true, isResizable: true },
+    { i: "pivot-table", x: 0, y: 32, w: 12, h: 9, minW: 8, minH: 6, isDraggable: true, isResizable: true },
   ],
 };
 
@@ -107,6 +108,7 @@ export default function OstrichApp({
     abTest: "@abtest-new-checkout-flow",
     whatIf: "@whatif-revenue-scenarios",
     salesforce: "@workflow-salesforce-sync",
+    pivotTable: "@pivot-sales-summary",
   });
 
   const handleRenameArtifact = (key: keyof typeof artifactNames, newName: string) => {
@@ -119,6 +121,7 @@ export default function OstrichApp({
       ...chartComments.map(c => ({ ...c, artifactName: artifactNames.chart, timestamp: '4d ago' })),
       ...abTestComments.map(c => ({ ...c, artifactName: artifactNames.abTest, timestamp: '2d ago' })),
       ...whatIfComments.map(c => ({ ...c, artifactName: artifactNames.whatIf, timestamp: '1d ago' })),
+      ...pivotComments.map(c => ({ ...c, artifactName: artifactNames.pivotTable, timestamp: 'Just now' })),
     ];
     
     const mappedActivities: Activity[] = allComments.map(comment => ({
@@ -235,6 +238,9 @@ export default function OstrichApp({
     } else if (lowerCaseQuery.includes('chart showing revenue by region')) {
       addArtifactsToLayout(['chart']);
       aiResponse = { sender: 'ai', text: "I've added a regional revenue chart to the right of your data." };
+    } else if (lowerCaseQuery.includes('pivot table')) {
+      addArtifactsToLayout(['pivot-table']);
+      aiResponse = { sender: 'ai', text: "Certainly. I've created a pivot table summarizing revenue by product and region, and added it to your canvas." };
     } else if (lowerCaseQuery.includes('filter the data to show only')) {
       setPreviousFilteredSalesData(filteredSalesData);
       const filtered = salesData.filter(s => s.region.toLowerCase().trim().startsWith('north') || s.region.toLowerCase().trim().startsWith('east'));
@@ -429,54 +435,6 @@ export default function OstrichApp({
     };
   }, [isPanning]);
   
-  const getConnectorPoints = (
-    fromLayout?: Layout,
-    toLayout?: Layout,
-    direction: "horizontal" | "vertical" = "horizontal"
-  ) => {
-    if (!fromLayout || !toLayout) return null;
-
-    const COLS = 24;
-    const ROW_HEIGHT = 30;
-    const MARGIN: [number, number] = [10, 10]; 
-    const LAYOUT_WIDTH = 2400;
-    const CONTAINER_PADDING: [number, number] = [32, 80];
-    const COL_WIDTH = (LAYOUT_WIDTH - MARGIN[0] * (COLS - 1) - CONTAINER_PADDING[0] * 2) / COLS;
-
-    const getPixelPosition = (item: Layout) => {
-      const x = Math.round(item.x * (COL_WIDTH + MARGIN[0]) + CONTAINER_PADDING[0]);
-      const y = Math.round(item.y * (ROW_HEIGHT + MARGIN[1]) + CONTAINER_PADDING[1]);
-      const width = Math.round(item.w * COL_WIDTH + Math.max(0, item.w - 1) * MARGIN[0]);
-      const height = Math.round(item.h * ROW_HEIGHT + Math.max(0, item.h - 1) * MARGIN[1]);
-      return { x, y, width, height };
-    };
-
-    const fromPos = getPixelPosition(fromLayout);
-    const toPos = getPixelPosition(toLayout);
-    let fromPoint, toPoint;
-
-    if (direction === "horizontal") {
-      fromPoint = { x: fromPos.x + fromPos.width, y: fromPos.y + fromPos.height / 2 };
-      toPoint = { x: toPos.x, y: toPos.y + toPos.height / 2 };
-    } else { 
-      fromPoint = { x: fromPos.x + fromPos.width / 2, y: fromPos.y + fromPos.height };
-      toPoint = { x: toPos.x + toPos.width / 2, y: toPos.y };
-    }
-    
-    return { from: fromPoint, to: toPoint };
-  };
-
-  const spreadsheetLayout = activeLayouts.lg?.find((l) => l.i === "spreadsheet");
-  const chartLayout = activeLayouts.lg?.find((l) => l.i === "chart");
-  const whatIfLayout = activeLayouts.lg?.find((l) => l.i === "what-if");
-  const abTestLayout = activeLayouts.lg?.find((l) => l.i === "ab-test");
-  const forecastLayout = activeLayouts.lg?.find((l) => l.i === "forecast");
-
-  const connectorPoints1 = getConnectorPoints(spreadsheetLayout, chartLayout, "horizontal");
-  const connectorPoints2 = getConnectorPoints(chartLayout, abTestLayout, "vertical");
-  const connectorPoints3 = getConnectorPoints(abTestLayout, whatIfLayout, "horizontal");
-  const connectorPoints4 = getConnectorPoints(spreadsheetLayout, forecastLayout, "vertical");
-
 
   return (
     <>
@@ -571,34 +529,6 @@ export default function OstrichApp({
           }}
         >
           <div className="w-[2400px] relative canvas-content-wrapper">
-            {connectorPoints1 && (
-              <ArtifactConnector
-                from={connectorPoints1.from}
-                to={connectorPoints1.to}
-                direction="horizontal"
-              />
-            )}
-            {connectorPoints2 && (
-              <ArtifactConnector
-                from={connectorPoints2.from}
-                to={connectorPoints2.to}
-                direction="vertical"
-              />
-            )}
-            {connectorPoints3 && (
-              <ArtifactConnector
-                from={connectorPoints3.from}
-                to={connectorPoints3.to}
-                direction="horizontal"
-              />
-            )}
-            {connectorPoints4 && (
-              <ArtifactConnector
-                from={connectorPoints4.from}
-                to={connectorPoints4.to}
-                direction="vertical"
-              />
-            )}
             <ResponsiveGridLayout
               key={activeSheetId}
               layouts={activeLayouts}
@@ -688,6 +618,17 @@ export default function OstrichApp({
                         artifactName={artifactNames.whatIf}
                         onRename={(newName) => handleRenameArtifact('whatIf', newName)}
                         data={initialWhatIfData}
+                      />
+                    </div>
+                  );
+                }
+                if (i === 'pivot-table') {
+                  return (
+                    <div key="pivot-table">
+                      <PivotTableWidget
+                        artifactName={artifactNames.pivotTable}
+                        onRename={(newName) => handleRenameArtifact('pivotTable', newName)}
+                        data={salesData}
                       />
                     </div>
                   );

@@ -34,6 +34,7 @@ const DEMO_SCRIPT = [
   "Hi there, I've just uploaded `q1_sales_report.csv`. Can you clean it up for me? I need capitalization standardized and region names corrected.",
   "Great. Can you create some KPI cards for total revenue, total sales, and average sale value?",
   "Perfect. Now, create a chart showing revenue by region.",
+  "Okay, that's useful. Now create a pivot table to summarize revenue by product and region.",
   "That looks good. Now, can you filter the data to show only the 'North' and 'East' regions? I want to compare their performance.",
   "In the main spreadsheet, can you apply conditional formatting to the revenue column? Highlight all values above $17,000 in green.",
   "Interesting. What is the total revenue per product?",

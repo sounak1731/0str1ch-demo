@@ -55,6 +55,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Separator } from "../ui/separator";
+import { Input } from "../ui/input";
 
 interface ToolboxProps {
   onHistoryClick: () => void;
@@ -86,6 +87,7 @@ const insertTools = [
 
 const dataTools = [
     { icon: Filter, name: "Filter Data" },
+    { icon: PaintBucket, name: "Conditional Formatting" },
     { icon: ArrowDownUp, name: "Sort Data" },
     { icon: ListX, name: "Remove Duplicates" },
     { icon: CheckSquare, name: "Data Validation" },
@@ -278,8 +280,12 @@ export function Toolbox({
           </Tooltip>
           <PopoverContent side="right" className="w-80 p-2">
               <div className="flex flex-col gap-2">
-                  <p className="font-medium text-sm px-2">Pre-built Formulae</p>
+                  <div className="p-2">
+                      <p className="font-medium text-sm mb-2">Formula Bar</p>
+                      <Input placeholder="=SUM(A1:A10)" />
+                  </div>
                   <Separator />
+                  <p className="font-medium text-sm px-2 pt-1">Pre-built Formulae</p>
                   {formulae.map((formula) => (
                     <Tooltip key={formula.name}>
                         <TooltipTrigger asChild>
