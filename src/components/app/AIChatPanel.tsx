@@ -140,6 +140,12 @@ export function AIChatPanel({ open, onClose, onForecast, onAnalyze, onReset, isL
                         >
                             {msg.text}
                         </div>
+                        {msg.sender === "user" && (
+                        <Avatar className="h-8 w-8">
+                            <AvatarImage src="https://placehold.co/40x40.png" data-ai-hint="person user" />
+                            <AvatarFallback>ME</AvatarFallback>
+                        </Avatar>
+                        )}
                     </div>
                     ))}
                     {isCurrentlyLoading && (
