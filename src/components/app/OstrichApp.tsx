@@ -60,6 +60,12 @@ const fullLayouts: Layouts = {
 
 const blankLayouts: Layouts = { lg: [] };
 
+const initialForecastData: Forecast[] = [
+  { id: 'forecast-1', month: 'May', revenue: 23000, product: 'Forecast', region: 'All', marketingSpend: 3300, cac: 155 },
+  { id: 'forecast-2', month: 'June', revenue: 25500, product: 'Forecast', region: 'All', marketingSpend: 3500, cac: 158 },
+  { id: 'forecast-3', month: 'July', revenue: 24000, product: 'Forecast', region: 'All', marketingSpend: 3400, cac: 156 },
+];
+
 export default function OstrichApp({ 
   initialSalesData,
   initialABTestData,
@@ -68,7 +74,7 @@ export default function OstrichApp({
   const [salesData, setSalesData] = useState<Sale[]>(initialSalesData);
   const [filteredSalesData, setFilteredSalesData] = useState<Sale[]>(salesData);
   const [previousFilteredSalesData, setPreviousFilteredSalesData] = useState<Sale[] | null>(null);
-  const [forecast, setForecast] = useState<Forecast[] | null>(null);
+  const [forecast, setForecast] = useState<Forecast[] | null>(initialForecastData);
   const [isLoading, setIsLoading] = useState({ clean: false, forecast: false, analyze: false, summarize: false, import: false });
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -619,7 +625,7 @@ export default function OstrichApp({
                       if (e.detail === 1) { // Prevents firing on double-click
                         setExpandedKpi({ title: kpi.title, data: kpi.data })
                       }
-                    }} className="cursor-pointer no-drag">
+                    }} className="cursor-pointer">
                       <KpiCard
                         title={kpi.title}
                         value={kpi.value}
@@ -705,7 +711,7 @@ export default function OstrichApp({
                   return (
                      <div key="forecast">
                         <Card className="h-full flex flex-col">
-                          <CardHeader className="no-drag">
+                          <CardHeader>
                             <CardTitle>3-Month Revenue Forecast</CardTitle>
                             <CardDescription>Forecasted sales data based on historical performance.</CardDescription>
                           </CardHeader>
@@ -726,7 +732,7 @@ export default function OstrichApp({
 
        <Dialog open={!!expandedKpi} onOpenChange={(isOpen) => !isOpen && setExpandedKpi(null)}>
         <DialogContent className="max-w-2xl h-[450px] flex flex-col">
-          <DialogHeader className="no-drag">
+          <DialogHeader>
             <div className="flex justify-between items-start">
               <div>
                 <DialogTitle>{expandedKpi?.title}</DialogTitle>
