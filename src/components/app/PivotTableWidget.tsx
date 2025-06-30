@@ -71,7 +71,7 @@ export function PivotTableWidget({ data, artifactName, onRename }: PivotTableWid
     const regions = [...new Set(data.map(item => normalizeRegionName(item.region)))].sort();
     
     const pivoted = products.map(product => {
-        const row: { product: string; [key: string]: number | string } = { product };
+        const row: { [key: string]: number | string } = { 'Product': product };
         let total = 0;
         regions.forEach(region => {
             const sales = data.filter(d => 
@@ -82,18 +82,18 @@ export function PivotTableWidget({ data, artifactName, onRename }: PivotTableWid
             row[region] = regionRevenue;
             total += regionRevenue;
         });
-        row.Total = total;
+        row['Total'] = total;
         return row;
     });
 
-    const totalsRow: { product: string; [key: string]: number | string } = { product: 'Grand Total' };
+    const totalsRow: { [key: string]: number | string } = { 'Product': 'Grand Total' };
     let grandTotal = 0;
     regions.forEach(region => {
         const regionTotal = pivoted.reduce((sum, row) => sum + (row[region] as number), 0);
         totalsRow[region] = regionTotal;
         grandTotal += regionTotal;
     });
-    totalsRow.Total = grandTotal;
+    totalsRow['Total'] = grandTotal;
 
     return {
         headers: ['Product', ...regions, 'Total'],
@@ -149,7 +149,7 @@ export function PivotTableWidget({ data, artifactName, onRename }: PivotTableWid
           </TableHeader>
           <TableBody>
             {pivotData.rows.map((row, index) => (
-              <TableRow key={index} className={cn(row.product === 'Grand Total' && "bg-muted font-bold")}>
+              <TableRow key={index} className={cn(row['Product'] === 'Grand Total' && "bg-muted font-bold")}>
                 {pivotData.headers.map((header) => (
                   <TableCell key={header} className={cn(header !== 'Product' && "text-right font-mono")}>
                     {formatCurrency(row[header])}
@@ -163,3 +163,4 @@ export function PivotTableWidget({ data, artifactName, onRename }: PivotTableWid
     </Card>
   );
 }
+    
