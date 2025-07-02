@@ -171,8 +171,7 @@ export function SpreadsheetCanvas({ data, artifactName, onRename, highlightHighR
           </ThreadPopover>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 p-0 overflow-hidden">
-        <div className="overflow-auto h-full border-t">
+      <CardContent className="flex-1 p-0 overflow-auto border-t">
           <Table className="grid-table">
             <TableHeader className="sticky top-0 bg-card z-10">
               <TableRow className="border-b-0">
@@ -259,7 +258,6 @@ export function SpreadsheetCanvas({ data, artifactName, onRename, highlightHighR
               ))}
             </TableBody>
           </Table>
-        </div>
       </CardContent>
       <CardFooter className="p-2 border-t">
         <Button variant="ghost" size="sm" onClick={onAddRow}><Plus className="h-4 w-4 mr-2" />Add Row</Button>
