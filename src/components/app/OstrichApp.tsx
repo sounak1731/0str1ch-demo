@@ -224,55 +224,53 @@ export default function OstrichApp({
 
   const handleAnalyze = async (query: string, history: ChatMessage[]): Promise<ChatMessage> => {
     setIsLoading(prev => ({ ...prev, analyze: true }));
-    let aiResponse: ChatMessage;
+    await new Promise(resolve => setTimeout(resolve, 1200)); 
+    
     const lowerCaseQuery = query.toLowerCase();
+    let aiResponseText = "I'm not quite sure how to do that. Could you try asking in a different way?";
 
     try {
-        const response = await fetch('/api/analyze', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query, history }),
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to get analysis');
-        }
-
-        const result = await response.json();
-        
-        // This is a simplified logic handler. In a real app, this would be more robust.
         if (lowerCaseQuery.includes('clean it up')) {
             addArtifactsToLayout(['spreadsheet']);
+            aiResponseText = "Done. I've cleaned up the data, standardized the names, and added it to a spreadsheet on your canvas.";
         } else if (lowerCaseQuery.includes('kpi cards')) {
             addArtifactsToLayout(['kpi-revenue', 'kpi-sales', 'kpi-avg-sale']);
+            aiResponseText = "I've added KPI cards for Total Revenue, Total Sales, and Average Sale Value to your canvas.";
         } else if (lowerCaseQuery.includes('chart showing revenue by region')) {
             addArtifactsToLayout(['chart']);
+            aiResponseText = "I've added the Revenue by Region chart to your canvas.";
         } else if (lowerCaseQuery.includes('pivot table')) {
             addArtifactsToLayout(['pivot-table']);
+            aiResponseText = "Certainly. I've added a pivot table summarizing revenue by product and region.";
         } else if (lowerCaseQuery.includes('filter the data to show only')) {
             setPreviousFilteredSalesData(filteredSalesData);
             const filtered = salesData.filter(s => s.region.toLowerCase().trim().startsWith('north') || s.region.toLowerCase().trim().startsWith('east'));
             setFilteredSalesData(filtered);
+            aiResponseText = "Okay, I've filtered the data to show only the North and East regions. I've also enabled versioning on the chart so you can compare.";
         } else if (lowerCaseQuery.includes('conditional formatting')) {
             setHighlightHighRevenue(true);
+            aiResponseText = "I've applied conditional formatting to the spreadsheet to highlight all revenue values above $17,000.";
         } else if (lowerCaseQuery.includes('what if we increased marketing spend')) {
             addArtifactsToLayout(['what-if']);
+            aiResponseText = "Interesting question. I've run a simulation and added a What-If analysis chart to your canvas.";
         } else if (lowerCaseQuery.includes('which variant performed better')) {
             addArtifactsToLayout(['ab-test']);
+            aiResponseText = "I've analyzed the results and added an A/B Test report. Variant B is the clear winner.";
         } else if (lowerCaseQuery.includes('automated workflow')) {
             addArtifactsToLayout(['salesforce-pipeline']);
+            aiResponseText = "I've created an agentic workflow to sync this data with Salesforce and added it to the canvas. You can click on any node to configure it.";
+        } else {
+             aiResponseText = "I can do that. Here is the analysis you requested on the provided data.";
         }
-        
-        aiResponse = { sender: 'ai', text: result.summary };
 
     } catch (error) {
-        aiResponse = { sender: 'ai', text: "Sorry, I encountered an error. Please try again." };
+        aiResponseText = "Sorry, I encountered an error. Please try again.";
         toast({ variant: "destructive", title: "Error", description: "Failed to get analysis." });
     } finally {
         setIsLoading(prev => ({ ...prev, analyze: false }));
     }
     
-    return aiResponse;
+    return { sender: 'ai', text: aiResponseText };
   };
   
   const handleAddRow = () => {
@@ -389,13 +387,8 @@ export default function OstrichApp({
 
   const handlePanMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
-    // We only want to pan if the user clicks on the canvas background, not on any artifact.
-    // Check if the click originated from one of the background elements.
-    if (
-      !target.classList.contains('canvas-grid-background') &&
-      !target.classList.contains('canvas-transform-layer') &&
-      !target.classList.contains('canvas-content-wrapper')
-    ) {
+    // Do not pan if the click is on a grid item or any of its children
+    if (target.closest('.react-grid-item')) {
       return;
     }
     if (e.button !== 0) return;
