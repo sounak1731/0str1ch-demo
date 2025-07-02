@@ -2,28 +2,24 @@
 
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import type { Sale } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { ThreadPopover } from "./ThreadPopover";
 import { Button } from "../ui/button";
-import { MessageSquare, Plus, Trash2, MessageCircle } from "lucide-react";
+import { MessageSquare, Plus, MessageCircle, MoreVertical, Trash2, ArrowUp, ArrowDown, Filter, Columns } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
     DropdownMenuTrigger,
-  } from "@/components/ui/dropdown-menu";
+    DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 interface SpreadsheetCanvasProps {
   data: Sale[];
@@ -31,9 +27,8 @@ interface SpreadsheetCanvasProps {
   onRename: (newName: string) => void;
   highlightHighRevenue?: boolean;
   onAddRow: () => void;
+  onDeleteRow: (id: string) => void;
   onContextualChat: (prompt: string) => void;
-  onAddColumn: () => void;
-  onDeleteColumn: () => void;
 }
 
 export const mockComments: Comment[] = [
@@ -41,34 +36,57 @@ export const mockComments: Comment[] = [
     { id: 'c6', user: 'Sales Lead', avatarFallback: 'SL', text: 'Thanks! Let\'s pull this into the regional meeting.', resolved: false },
 ];
 
-const ColumnHeader = ({ children, onAdd, onDelete }: { children: React.ReactNode, onAdd: () => void, onDelete: () => void }) => (
-    <div className="flex items-center justify-between group">
-      <span>{children}</span>
-      <div className="flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => {e.stopPropagation(); onAdd();}}><Plus className="h-3.5 w-3.5" /></Button>
-            </TooltipTrigger>
-            <TooltipContent><p>Add column</p></TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={(e) => {e.stopPropagation(); onDelete();}}><Trash2 className="h-3.5 w-3.5" /></Button>
-            </TooltipTrigger>
-            <TooltipContent><p>Delete column</p></TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </div>
-    </div>
-  );
+const allHeaders = [
+    { key: 'product', label: 'Product' },
+    { key: 'region', label: 'Region' },
+    { key: 'month', label: 'Month' },
+    { key: 'revenue', label: 'Revenue' },
+    { key: 'marketingSpend', label: 'Marketing Spend' },
+    { key: 'cac', label: 'CAC' },
+    { key: 'status', label: 'Status' }
+];
 
-export function SpreadsheetCanvas({ data, artifactName, onRename, highlightHighRevenue, onAddRow, onContextualChat, onAddColumn, onDeleteColumn }: SpreadsheetCanvasProps) {
+export function SpreadsheetCanvas({ data, artifactName, onRename, highlightHighRevenue, onAddRow, onDeleteRow, onContextualChat }: SpreadsheetCanvasProps) {
   const [isRenaming, setIsRenaming] = useState(false);
   const [draftName, setDraftName] = useState(artifactName);
   const inputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+  
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(allHeaders.map(h => h.key));
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Sale; direction: 'ascending' | 'descending' } | null>(null);
+
+  const sortedData = useMemo(() => {
+    let sortableItems = [...data];
+    if (sortConfig !== null) {
+      sortableItems.sort((a, b) => {
+        const valA = a[sortConfig.key];
+        const valB = b[sortConfig.key];
+
+        if (typeof valA === 'string' && typeof valB === 'string') {
+            return sortConfig.direction === 'ascending' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        }
+        if (typeof valA === 'number' && typeof valB === 'number') {
+            return sortConfig.direction === 'ascending' ? valA - valB : valB - valA;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [data, sortConfig]);
+
+  const requestSort = (key: keyof Sale) => {
+    let direction: 'ascending' | 'descending' = 'ascending';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'ascending') {
+      direction = 'descending';
+    }
+    setSortConfig({ key, direction });
+  };
+  
+  const handleHideColumn = (keyToHide: string) => {
+    setVisibleColumns(prev => prev.filter(key => key !== keyToHide));
+  };
+  
+  const headers = allHeaders.filter(h => visibleColumns.includes(h.key));
 
   const handleNameDoubleClick = () => setIsRenaming(true);
 
@@ -87,16 +105,6 @@ export function SpreadsheetCanvas({ data, artifactName, onRename, highlightHighR
       setIsRenaming(false);
     }
   };
-
-  const headers = [
-    { key: 'product', label: 'Product' },
-    { key: 'region', label: 'Region' },
-    { key: 'month', label: 'Month' },
-    { key: 'revenue', label: 'Revenue' },
-    { key: 'marketingSpend', label: 'Marketing Spend' },
-    { key: 'cac', label: 'CAC' },
-    { key: 'status', label: 'Status' }
-  ];
 
   useEffect(() => {
     if (isRenaming && inputRef.current) {
@@ -139,7 +147,7 @@ export function SpreadsheetCanvas({ data, artifactName, onRename, highlightHighR
     <Card className="shadow-sm w-full h-full flex flex-col rounded-lg">
       <CardHeader>
         <div className="flex justify-between items-start">
-          <div>
+          <div className="no-drag">
             {isRenaming ? (
               <Input
                 ref={inputRef}
@@ -157,80 +165,97 @@ export function SpreadsheetCanvas({ data, artifactName, onRename, highlightHighR
             <CardDescription>Raw sales data for the first quarter.</CardDescription>
           </div>
           <ThreadPopover comments={mockComments}>
-             <Button variant="ghost" size="icon" aria-label="View Comments">
+             <Button variant="ghost" size="icon" aria-label="View Comments" className="no-drag">
                 <MessageSquare className="h-5 w-5 text-muted-foreground" />
              </Button>
           </ThreadPopover>
         </div>
       </CardHeader>
       <CardContent className="flex-1 p-0 overflow-hidden">
-        <div className="overflow-y-auto h-full">
-          <Table>
-            <TableHeader>
-              <TableRow>
+        <div className="overflow-auto h-full border-t">
+          <Table className="grid-table">
+            <TableHeader className="sticky top-0 bg-card z-10">
+              <TableRow className="border-b-0">
+                 <TableHead className="w-16 text-center border-r border-b">
+                    #
+                 </TableHead>
                  {headers.map(header => (
-                    <DropdownMenu key={header.key}>
-                        <DropdownMenuTrigger asChild>
-                            <TableHead 
-                                className={cn("cursor-context-menu", ['revenue', 'marketingSpend', 'cac'].includes(header.key) && "text-right")}
-                                onContextMenu={(e) => e.preventDefault()}
-                                data-context-menu-trigger
-                            >
-                                <ColumnHeader onAdd={onAddColumn} onDelete={onDeleteColumn}>
-                                    {header.label}
-                                </ColumnHeader>
-                            </TableHead>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={() => onContextualChat(`Let's discuss the "${header.label}" column.`)}>
-                                <MessageCircle className="mr-2 h-4 w-4" />
-                                <span>Discuss in Chat</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                    <TableHead 
+                        key={header.key}
+                        className={cn("border-r border-b", ['revenue', 'marketingSpend', 'cac'].includes(header.key) && "text-right")}
+                    >
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <div className="flex items-center gap-1 cursor-pointer w-full" data-context-menu-trigger>
+                                    <span className="flex-1">{header.label}</span>
+                                    {sortConfig && sortConfig.key === header.key && (
+                                        sortConfig.direction === 'ascending' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                                    )}
+                                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="start">
+                                <DropdownMenuItem onSelect={() => requestSort(header.key as keyof Sale)}>
+                                    <ArrowUp className="mr-2 h-4 w-4" /> Sort A-Z
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => requestSort(header.key as keyof Sale)}>
+                                    <ArrowDown className="mr-2 h-4 w-4" /> Sort Z-A
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onSelect={() => toast({ title: "Feature coming soon!" })}>
+                                    <Filter className="mr-2 h-4 w-4" /> Filter by...
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onSelect={() => handleHideColumn(header.key)} className="text-destructive focus:text-destructive">
+                                    <Columns className="mr-2 h-4 w-4" /> Hide column
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </TableHead>
                  ))}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((sale, index) => (
-                <DropdownMenu key={sale.id}>
-                    <DropdownMenuTrigger asChild>
-                        <TableRow 
-                            onContextMenu={(e) => e.preventDefault()} 
-                            className={cn("cursor-context-menu", highlightHighRevenue && sale.revenue > 17000 && "bg-green-100/50 hover:bg-green-100/80")}
-                            data-context-menu-trigger
+              {sortedData.map((sale, index) => (
+                <TableRow 
+                    key={sale.id}
+                    className={cn("cursor-context-menu", highlightHighRevenue && sale.revenue > 17000 && "bg-green-100/50 hover:bg-green-100/80")}
+                >
+                    <TableCell className="text-center text-muted-foreground border-r border-b">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <div className="flex items-center justify-center cursor-pointer" data-context-menu-trigger>
+                                    {index + 1}
+                                    <MoreVertical className="h-4 w-4 ml-1 opacity-0 group-hover:opacity-100" />
+                                </div>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                                <DropdownMenuItem onSelect={() => onContextualChat(`Let's discuss row ${index + 1} (${sale.product})`)}>
+                                    <MessageCircle className="mr-2 h-4 w-4" />
+                                    <span>Discuss this row</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onSelect={() => onDeleteRow(sale.id)} className="text-destructive focus:text-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    <span>Delete row</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </TableCell>
+
+                    {headers.map(header => (
+                        <TableCell 
+                            key={header.key}
+                            className={cn(
+                                "font-medium border-r border-b",
+                                ['revenue', 'marketingSpend', 'cac'].includes(header.key) && "text-right font-mono tabular-nums",
+                                highlightHighRevenue && header.key === 'revenue' && sale.revenue > 17000 && "text-green-700"
+                            )}
                         >
-                            {headers.map(header => (
-                                <TableCell 
-                                    key={header.key}
-                                    className={cn(
-                                        "font-medium",
-                                        ['revenue', 'marketingSpend', 'cac'].includes(header.key) && "text-right",
-                                        highlightHighRevenue && header.key === 'revenue' && sale.revenue > 17000 && "text-green-700"
-                                    )}
-                                >
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <div className="w-full h-full cursor-context-menu">{renderCellContent(sale, header.key)}</div>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent>
-                                            <DropdownMenuItem onSelect={() => onContextualChat(`In row ${index + 1}, what about the value in the "${header.label}" column?`)}>
-                                                <MessageCircle className="mr-2 h-4 w-4" />
-                                                <span>Discuss in Chat</span>
-                                            </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
-                            ))}
-                        </TableRow>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent>
-                        <DropdownMenuItem onSelect={() => onContextualChat(`Let's discuss row ${index + 1} (${sale.product})`)}>
-                            <MessageCircle className="mr-2 h-4 w-4" />
-                            <span>Discuss this entire row</span>
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                            <div className="w-full h-full">{renderCellContent(sale, header.key)}</div>
+                        </TableCell>
+                    ))}
+                </TableRow>
               ))}
             </TableBody>
           </Table>

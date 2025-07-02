@@ -290,18 +290,18 @@ export default function OstrichApp({
       marketingSpend: 0,
       cac: 0,
     };
-    setSalesData(prev => [...prev, newRow]);
-    setFilteredSalesData(prev => [...prev, newRow]);
-  };
-  
-  const handleAddColumn = () => {
-    toast({ title: "Feature coming soon!", description: "The ability to add columns is on our roadmap." });
-  };
-  
-  const handleDeleteColumn = () => {
-     toast({ title: "Feature coming soon!", description: "The ability to delete columns is on our roadmap." });
+    const newData = [...salesData, newRow];
+    setSalesData(newData);
+    setFilteredSalesData(newData);
   };
 
+  const handleDeleteRow = (idToDelete: string) => {
+    const newData = salesData.filter(row => row.id !== idToDelete);
+    setSalesData(newData);
+    setFilteredSalesData(newData);
+    toast({ title: "Row deleted successfully." });
+  };
+  
   const handleContextualChat = (prompt: string) => {
     setContextualMessage({ sender: 'user', text: prompt });
     if (!isChatOpen) setIsChatOpen(true);
@@ -572,9 +572,8 @@ export default function OstrichApp({
                         data={filteredSalesData}
                         highlightHighRevenue={highlightHighRevenue}
                         onAddRow={handleAddRow}
+                        onDeleteRow={handleDeleteRow}
                         onContextualChat={handleContextualChat}
-                        onAddColumn={handleAddColumn}
-                        onDeleteColumn={handleDeleteColumn}
                       />
                     </div>
                   );
