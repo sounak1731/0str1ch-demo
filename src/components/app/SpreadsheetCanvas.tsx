@@ -171,95 +171,93 @@ export function SpreadsheetCanvas({ data, artifactName, onRename, highlightHighR
           </ThreadPopover>
         </div>
       </CardHeader>
-      <CardContent className="flex-1 p-0 border-t min-h-0">
-        <div className="h-full overflow-auto">
-          <Table>
-            <TableHeader className="sticky top-0 bg-card z-10">
-              <TableRow className="border-b-0">
-                 <TableHead className="w-16 text-center border-r border-b">
-                    #
-                 </TableHead>
-                 {headers.map(header => (
-                    <TableHead 
-                        key={header.key}
-                        className={cn("border-r border-b", ['revenue', 'marketingSpend', 'cac'].includes(header.key) && "text-right")}
-                    >
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <div className="flex items-center gap-1 cursor-pointer w-full" data-context-menu-trigger>
-                                    <span className="flex-1">{header.label}</span>
-                                    {sortConfig && sortConfig.key === header.key && (
-                                        sortConfig.direction === 'ascending' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                                    )}
-                                    <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                                </div>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start">
-                                <DropdownMenuItem onSelect={() => requestSort(header.key as keyof Sale)}>
-                                    <ArrowUp className="mr-2 h-4 w-4" /> Sort A-Z
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onSelect={() => requestSort(header.key as keyof Sale)}>
-                                    <ArrowDown className="mr-2 h-4 w-4" /> Sort Z-A
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onSelect={() => toast({ title: "Feature coming soon!" })}>
-                                    <Filter className="mr-2 h-4 w-4" /> Filter by...
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onSelect={() => handleHideColumn(header.key)} className="text-destructive focus:text-destructive">
-                                    <Columns className="mr-2 h-4 w-4" /> Hide column
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </TableHead>
-                 ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedData.map((sale, index) => (
-                <TableRow 
-                    key={sale.id}
-                    className={cn("cursor-context-menu", highlightHighRevenue && sale.revenue > 17000 && "bg-green-100/50 hover:bg-green-100/80")}
-                >
-                    <TableCell className="text-center text-muted-foreground border-r border-b">
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <div className="flex items-center justify-center cursor-pointer" data-context-menu-trigger>
-                                    {index + 1}
-                                    <MoreVertical className="h-4 w-4 ml-1 opacity-0 group-hover:opacity-100" />
-                                </div>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuItem onSelect={() => onContextualChat(`Let's discuss row ${index + 1} (${sale.product})`)}>
-                                    <MessageCircle className="mr-2 h-4 w-4" />
-                                    <span>Discuss this row</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onSelect={() => onDeleteRow(sale.id)} className="text-destructive focus:text-destructive">
-                                    <Trash2 className="mr-2 h-4 w-4" />
-                                    <span>Delete row</span>
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    </TableCell>
+      <CardContent className="flex-1 p-0 border-t min-h-0 overflow-auto">
+        <Table>
+          <TableHeader className="sticky top-0 bg-card z-10">
+            <TableRow className="border-b-0">
+               <TableHead className="w-16 text-center border-r border-b">
+                  #
+               </TableHead>
+               {headers.map(header => (
+                  <TableHead 
+                      key={header.key}
+                      className={cn("border-r border-b", ['revenue', 'marketingSpend', 'cac'].includes(header.key) && "text-right")}
+                  >
+                      <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                              <div className="flex items-center gap-1 cursor-pointer w-full" data-context-menu-trigger>
+                                  <span className="flex-1">{header.label}</span>
+                                  {sortConfig && sortConfig.key === header.key && (
+                                      sortConfig.direction === 'ascending' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                                  )}
+                                  <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                              <DropdownMenuItem onSelect={() => requestSort(header.key as keyof Sale)}>
+                                  <ArrowUp className="mr-2 h-4 w-4" /> Sort A-Z
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onSelect={() => requestSort(header.key as keyof Sale)}>
+                                  <ArrowDown className="mr-2 h-4 w-4" /> Sort Z-A
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onSelect={() => toast({ title: "Feature coming soon!" })}>
+                                  <Filter className="mr-2 h-4 w-4" /> Filter by...
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onSelect={() => handleHideColumn(header.key)} className="text-destructive focus:text-destructive">
+                                  <Columns className="mr-2 h-4 w-4" /> Hide column
+                              </DropdownMenuItem>
+                          </DropdownMenuContent>
+                      </DropdownMenu>
+                  </TableHead>
+               ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {sortedData.map((sale, index) => (
+              <TableRow 
+                  key={sale.id}
+                  className={cn("cursor-context-menu", highlightHighRevenue && sale.revenue > 17000 && "bg-green-100/50 hover:bg-green-100/80")}
+              >
+                  <TableCell className="text-center text-muted-foreground border-r border-b">
+                      <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                              <div className="flex items-center justify-center cursor-pointer" data-context-menu-trigger>
+                                  {index + 1}
+                                  <MoreVertical className="h-4 w-4 ml-1 opacity-0 group-hover:opacity-100" />
+                              </div>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                              <DropdownMenuItem onSelect={() => onContextualChat(`Let's discuss row ${index + 1} (${sale.product})`)}>
+                                  <MessageCircle className="mr-2 h-4 w-4" />
+                                  <span>Discuss this row</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onSelect={() => onDeleteRow(sale.id)} className="text-destructive focus:text-destructive">
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  <span>Delete row</span>
+                              </DropdownMenuItem>
+                          </DropdownMenuContent>
+                      </DropdownMenu>
+                  </TableCell>
 
-                    {headers.map(header => (
-                        <TableCell 
-                            key={header.key}
-                            className={cn(
-                                "font-medium border-r border-b",
-                                ['revenue', 'marketingSpend', 'cac'].includes(header.key) && "text-right font-mono tabular-nums",
-                                highlightHighRevenue && header.key === 'revenue' && sale.revenue > 17000 && "text-green-700"
-                            )}
-                        >
-                            <div className="w-full h-full">{renderCellContent(sale, header.key)}</div>
-                        </TableCell>
-                    ))}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+                  {headers.map(header => (
+                      <TableCell 
+                          key={header.key}
+                          className={cn(
+                              "font-medium border-r border-b",
+                              ['revenue', 'marketingSpend', 'cac'].includes(header.key) && "text-right font-mono tabular-nums",
+                              highlightHighRevenue && header.key === 'revenue' && sale.revenue > 17000 && "text-green-700"
+                          )}
+                      >
+                          <div className="w-full h-full">{renderCellContent(sale, header.key)}</div>
+                      </TableCell>
+                  ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
       <CardFooter className="p-2 border-t">
         <Button variant="ghost" size="sm" onClick={onAddRow}><Plus className="h-4 w-4 mr-2" />Add Row</Button>
