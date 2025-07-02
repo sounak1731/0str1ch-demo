@@ -13,8 +13,12 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const AnalyzeDataQueryInputSchema = z.object({
-  query: z.string().describe('The query related to the sales data.'),
+  query: z.string().describe('The current query related to the sales data.'),
   salesData: z.string().describe('Sales data in JSON format, including revenue, marketingSpend, and cac.'),
+  history: z.array(z.object({
+    sender: z.string(),
+    text: z.string(),
+  })).optional().describe('The conversation history to provide context.'),
 });
 export type AnalyzeDataQueryInput = z.infer<typeof AnalyzeDataQueryInputSchema>;
 
@@ -37,7 +41,14 @@ const prompt = ai.definePrompt({
 
   Sales Data: {{{salesData}}}
 
-  User's Request: {{{query}}}
+  You have access to the conversation history to understand context from previous turns.
+
+  Conversation History:
+  {{#each history}}
+  - {{this.sender}}: {{this.text}}
+  {{/each}}
+
+  User's Current Request: {{{query}}}
 
   Your Response: `,
 });

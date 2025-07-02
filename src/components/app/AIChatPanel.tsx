@@ -23,7 +23,7 @@ interface AICompanionPanelProps {
   open: boolean;
   onClose: () => void;
   onForecast: () => Promise<{text: string}>;
-  onAnalyze: (query: string) => Promise<ChatMessage>;
+  onAnalyze: (query: string, history: ChatMessage[]) => Promise<ChatMessage>;
   onReset: () => void;
   isLoading: { forecast: boolean, analyze: boolean, summarize: boolean, clean: boolean, import: boolean };
   newMessage: ChatMessage | null;
@@ -75,7 +75,8 @@ export function AIChatPanel({ open, onClose, onForecast, onAnalyze, onReset, isL
 
     setIsResponding(true);
     const userMessage: ChatMessage = { sender: "user", text: prompt };
-    setMessages((prev) => [...prev, userMessage]);
+    const currentMessages = [...messages, userMessage];
+    setMessages(currentMessages);
     setInputValue("");
     
     let aiResponse: ChatMessage;
@@ -84,7 +85,7 @@ export function AIChatPanel({ open, onClose, onForecast, onAnalyze, onReset, isL
       const result = await onForecast();
       aiResponse = { sender: 'ai', text: result.text };
     } else {
-       aiResponse = await onAnalyze(prompt);
+       aiResponse = await onAnalyze(prompt, currentMessages);
     }
 
     setMessages((prev) => [...prev, aiResponse]);

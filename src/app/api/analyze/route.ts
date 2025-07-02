@@ -4,10 +4,11 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const { query } = await request.json();
+    const { query, history } = await request.json();
     const analysis = await analyzeDataQuery({
       query: query,
       salesData: JSON.stringify(salesData),
+      history: history,
     });
     return NextResponse.json(analysis);
   } catch (error) {

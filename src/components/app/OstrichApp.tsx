@@ -222,61 +222,56 @@ export default function OstrichApp({
     }
   };
 
-  const handleAnalyze = async (query: string): Promise<ChatMessage> => {
+  const handleAnalyze = async (query: string, history: ChatMessage[]): Promise<ChatMessage> => {
     setIsLoading(prev => ({ ...prev, analyze: true }));
     let aiResponse: ChatMessage;
     const lowerCaseQuery = query.toLowerCase();
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+        const response = await fetch('/api/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query, history }),
+        });
 
-    if (lowerCaseQuery.includes('clean it up')) {
-      addArtifactsToLayout(['spreadsheet']);
-      aiResponse = { sender: 'ai', text: "Of course! I've analyzed your CSV, corrected capitalization for product names, and standardized region formats. Here is the cleaned data in a new spreadsheet artifact on your canvas." };
-    } else if (lowerCaseQuery.includes('kpi cards')) {
-      addArtifactsToLayout(['kpi-revenue', 'kpi-sales', 'kpi-avg-sale']);
-      aiResponse = { sender: 'ai', text: "Done. I've added KPI cards for total revenue, sales, and average sale value above the spreadsheet." };
-    } else if (lowerCaseQuery.includes('chart showing revenue by region')) {
-      addArtifactsToLayout(['chart']);
-      aiResponse = { sender: 'ai', text: "I've added a regional revenue chart to the right of your data." };
-    } else if (lowerCaseQuery.includes('pivot table')) {
-      addArtifactsToLayout(['pivot-table']);
-      aiResponse = { sender: 'ai', text: "Certainly. I've created a pivot table summarizing revenue by product and region, and added it to your canvas." };
-    } else if (lowerCaseQuery.includes('filter the data to show only')) {
-      setPreviousFilteredSalesData(filteredSalesData);
-      const filtered = salesData.filter(s => s.region.toLowerCase().trim().startsWith('north') || s.region.toLowerCase().trim().startsWith('east'));
-      setFilteredSalesData(filtered);
-      aiResponse = { sender: 'ai', text: "Done. I've filtered the data to only show the North and East regions. The chart artifact now has 'Current' and 'Previous' views so you can compare." };
-    } else if (lowerCaseQuery.includes('conditional formatting')) {
-      setHighlightHighRevenue(true);
-      aiResponse = { sender: 'ai', text: "I've highlighted all revenue values over $17,000 in green for you." };
-    } else if (lowerCaseQuery.includes("total revenue per product")) {
-        const revenueByProduct = salesData.reduce((acc, sale) => {
-            const productName = sale.product.charAt(0).toUpperCase() + sale.product.slice(1).toLowerCase();
-            acc[productName] = (acc[productName] || 0) + sale.revenue;
-            return acc;
-        }, {} as Record<string, number>);
+        if (!response.ok) {
+            throw new Error('Failed to get analysis');
+        }
 
-        const summary = Object.entries(revenueByProduct)
-            .map(([product, revenue]) => `- ${product}: $${revenue.toLocaleString()}`)
-            .join('\n');
+        const result = await response.json();
         
-        aiResponse = { sender: 'ai', text: `Certainly! Here is the total revenue per product based on the data:\n\n${summary}` };
-    } else if (lowerCaseQuery.includes('what if we increased marketing spend')) {
-      addArtifactsToLayout(['what-if']);
-      aiResponse = { sender: 'ai', text: "I've created a what-if analysis chart for you to explore that scenario." };
-    } else if (lowerCaseQuery.includes('which variant performed better')) {
-      addArtifactsToLayout(['ab-test']);
-      aiResponse = { sender: 'ai', text: "Done. I've added an A/B test result card. Variant B is the clear winner with a higher conversion rate and an acceptable cost per conversion." };
-    } else if (lowerCaseQuery.includes('automated workflow')) {
-      addArtifactsToLayout(['salesforce-pipeline']);
-      aiResponse = { sender: 'ai', text: "Excellent idea. I've added an automated workflow to sync with Salesforce to your canvas. You can click on each step to configure it." };
-    } else if (lowerCaseQuery.includes('different ai model')) {
-      aiResponse = { sender: 'ai', text: "You can switch between models using the dropdown at the bottom of this panel. `0str1ch 1.0` is powerful, while `0str1ch mini` is faster." };
-    } else {
-        aiResponse = { sender: 'ai', text: "I've completed that action for you."};
-    }
+        // This is a simplified logic handler. In a real app, this would be more robust.
+        if (lowerCaseQuery.includes('clean it up')) {
+            addArtifactsToLayout(['spreadsheet']);
+        } else if (lowerCaseQuery.includes('kpi cards')) {
+            addArtifactsToLayout(['kpi-revenue', 'kpi-sales', 'kpi-avg-sale']);
+        } else if (lowerCaseQuery.includes('chart showing revenue by region')) {
+            addArtifactsToLayout(['chart']);
+        } else if (lowerCaseQuery.includes('pivot table')) {
+            addArtifactsToLayout(['pivot-table']);
+        } else if (lowerCaseQuery.includes('filter the data to show only')) {
+            setPreviousFilteredSalesData(filteredSalesData);
+            const filtered = salesData.filter(s => s.region.toLowerCase().trim().startsWith('north') || s.region.toLowerCase().trim().startsWith('east'));
+            setFilteredSalesData(filtered);
+        } else if (lowerCaseQuery.includes('conditional formatting')) {
+            setHighlightHighRevenue(true);
+        } else if (lowerCaseQuery.includes('what if we increased marketing spend')) {
+            addArtifactsToLayout(['what-if']);
+        } else if (lowerCaseQuery.includes('which variant performed better')) {
+            addArtifactsToLayout(['ab-test']);
+        } else if (lowerCaseQuery.includes('automated workflow')) {
+            addArtifactsToLayout(['salesforce-pipeline']);
+        }
+        
+        aiResponse = { sender: 'ai', text: result.summary };
 
-    setIsLoading(prev => ({ ...prev, analyze: false }));
+    } catch (error) {
+        aiResponse = { sender: 'ai', text: "Sorry, I encountered an error. Please try again." };
+        toast({ variant: "destructive", title: "Error", description: "Failed to get analysis." });
+    } finally {
+        setIsLoading(prev => ({ ...prev, analyze: false }));
+    }
+    
     return aiResponse;
   };
   
@@ -551,11 +546,7 @@ export default function OstrichApp({
                   const kpi = kpiMap[i as keyof typeof kpiMap];
                   if (!kpi) return null;
                   return (
-                    <div key={i} onClick={(e) => {
-                      if (e.detail === 1) { // Prevents firing on double-click
-                        setExpandedKpi({ title: kpi.title, data: kpi.data })
-                      }
-                    }} className="cursor-pointer">
+                    <div key={i} onDoubleClick={() => setExpandedKpi({ title: kpi.title, data: kpi.data })} className="cursor-pointer">
                       <KpiCard
                         title={kpi.title}
                         value={kpi.value}
