@@ -260,7 +260,14 @@ export default function OstrichApp({
             addArtifactsToLayout(['salesforce-pipeline']);
             aiResponseText = "I've created an agentic workflow to sync this data with Salesforce and added it to the canvas. You can click on any node to configure it.";
         } else {
-             aiResponseText = "I can do that. Here is the analysis you requested on the provided data.";
+             const result = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query, history, salesData: JSON.stringify(salesData) }),
+            });
+            if (!result.ok) throw new Error('API Error');
+            const data = await result.json();
+            aiResponseText = data.summary;
         }
 
     } catch (error) {
