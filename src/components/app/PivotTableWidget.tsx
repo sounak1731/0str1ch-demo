@@ -7,9 +7,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "../ui/button";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Info } from "lucide-react";
 import { ThreadPopover } from "./ThreadPopover";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ArtifactContextDialog } from "./ArtifactContextDialog";
 
 interface PivotTableWidgetProps {
   data: Sale[];
@@ -26,6 +28,19 @@ export function PivotTableWidget({ data, artifactName, onRename }: PivotTableWid
   const [isRenaming, setIsRenaming] = useState(false);
   const [draftName, setDraftName] = useState(artifactName);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isContextOpen, setIsContextOpen] = useState(false);
+
+  const context = {
+    title: `Context for ${artifactName}`,
+    dataSource: "@spreadsheet-sales-data",
+    aiAction: "Pivoted the sales data to summarize total revenue with products as rows and regions as columns. Calculated grand totals for both.",
+    generatedQuery: `// This is a conceptual representation.
+// The actual pivot logic is handled in the component.
+PIVOT @spreadsheet-sales-data
+ON region
+FOR SUM(revenue)
+ROWS product;`,
+  };
 
   const handleNameDoubleClick = () => setIsRenaming(true);
 
@@ -109,58 +124,77 @@ export function PivotTableWidget({ data, artifactName, onRename }: PivotTableWid
   }
 
   return (
-    <Card className="shadow-sm h-full flex flex-col">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-            <div className="no-drag">
-              {isRenaming ? (
-                <Input
-                  ref={inputRef}
-                  value={draftName}
-                  onChange={(e) => setDraftName(e.target.value)}
-                  onBlur={handleNameBlur}
-                  onKeyDown={handleNameKeyDown}
-                  className="text-lg h-8 py-0"
-                />
-              ) : (
-                <CardTitle onDoubleClick={handleNameDoubleClick} className="text-lg cursor-pointer">
-                  {artifactName}
-                </CardTitle>
-              )}
-              <CardDescription>Revenue by Product and Region</CardDescription>
-            </div>
-            <ThreadPopover comments={mockComments}>
-                <Button variant="ghost" size="icon" aria-label="View Comments" className="no-drag">
-                    <MessageSquare className="h-5 w-5 text-muted-foreground" />
-                </Button>
-            </ThreadPopover>
-        </div>
-      </CardHeader>
-      <CardContent className="flex-1 p-0 overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              {pivotData.headers.map((header) => (
-                <TableHead key={header} className={cn("sticky top-0 bg-card", header !== 'Product' && "text-right")}>
-                  {header}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {pivotData.rows.map((row, index) => (
-              <TableRow key={index} className={cn(row['Product'] === 'Grand Total' && "bg-muted font-bold")}>
+    <>
+      <Card className="shadow-sm h-full flex flex-col">
+        <CardHeader>
+          <div className="flex justify-between items-start">
+              <div className="no-drag">
+                {isRenaming ? (
+                  <Input
+                    ref={inputRef}
+                    value={draftName}
+                    onChange={(e) => setDraftName(e.target.value)}
+                    onBlur={handleNameBlur}
+                    onKeyDown={handleNameKeyDown}
+                    className="text-lg h-8 py-0"
+                  />
+                ) : (
+                  <CardTitle onDoubleClick={handleNameDoubleClick} className="text-lg cursor-pointer">
+                    {artifactName}
+                  </CardTitle>
+                )}
+                <CardDescription>Revenue by Product and Region</CardDescription>
+              </div>
+              <div className="flex items-center no-drag">
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" aria-label="View Context" onClick={() => setIsContextOpen(true)}>
+                                <Info className="h-5 w-5 text-muted-foreground" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent><p>Show Context</p></TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+                <ThreadPopover comments={mockComments}>
+                    <Button variant="ghost" size="icon" aria-label="View Comments" className="no-drag">
+                        <MessageSquare className="h-5 w-5 text-muted-foreground" />
+                    </Button>
+                </ThreadPopover>
+              </div>
+          </div>
+        </CardHeader>
+        <CardContent className="flex-1 p-0 overflow-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
                 {pivotData.headers.map((header) => (
-                  <TableCell key={header} className={cn(header !== 'Product' && "text-right font-mono")}>
-                    {formatCurrency(row[header])}
-                  </TableCell>
+                  <TableHead key={header} className={cn("sticky top-0 bg-card", header !== 'Product' && "text-right")}>
+                    {header}
+                  </TableHead>
                 ))}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
+            </TableHeader>
+            <TableBody>
+              {pivotData.rows.map((row, index) => (
+                <TableRow key={index} className={cn(row['Product'] === 'Grand Total' && "bg-muted font-bold")}>
+                  {pivotData.headers.map((header) => (
+                    <TableCell key={header} className={cn(header !== 'Product' && "text-right font-mono")}>
+                      {formatCurrency(row[header])}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      <ArtifactContextDialog
+        isOpen={isContextOpen}
+        onClose={() => setIsContextOpen(false)}
+        context={context}
+      />
+    </>
   );
 }
     

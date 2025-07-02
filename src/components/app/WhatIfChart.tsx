@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import ReactECharts from 'echarts-for-react';
 import { ThreadPopover } from "./ThreadPopover";
 import { Button } from "../ui/button";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ArtifactContextDialog } from "./ArtifactContextDialog";
 
 interface WhatIfChartProps {
   data: WhatIfScenario[];
@@ -25,6 +27,19 @@ export function WhatIfChart({ data, artifactName, onRename }: WhatIfChartProps) 
   const [isRenaming, setIsRenaming] = useState(false);
   const [draftName, setDraftName] = useState(artifactName);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isContextOpen, setIsContextOpen] = useState(false);
+
+  const context = {
+    title: `Context for ${artifactName}`,
+    dataSource: "Historical performance data and growth model assumptions.",
+    aiAction: "Generated three revenue scenarios (Pessimistic, Neutral, Optimistic) by applying different growth modifiers to the baseline forecast.",
+    generatedQuery: `function generateScenarios(baseline) {
+  const optimistic = baseline.map(point => point * 1.20); // +20%
+  const neutral    = baseline;
+  const pessimistic = baseline.map(point => point * 0.85); // -15%
+  return { optimistic, neutral, pessimistic };
+}`,
+  };
 
   const handleNameDoubleClick = () => setIsRenaming(true);
 
@@ -119,39 +134,58 @@ export function WhatIfChart({ data, artifactName, onRename }: WhatIfChartProps) 
   });
 
   return (
-    <Card className="shadow-sm flex flex-col h-full">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-            <div className="no-drag">
-              {isRenaming ? (
-                <Input
-                  ref={inputRef}
-                  value={draftName}
-                  onChange={(e) => setDraftName(e.target.value)}
-                  onBlur={handleNameBlur}
-                  onKeyDown={handleNameKeyDown}
-                  className="text-lg h-8 py-0"
-                />
-              ) : (
-                <CardTitle onDoubleClick={handleNameDoubleClick} className="text-lg cursor-pointer">
-                  {artifactName}
-                </CardTitle>
-              )}
-              <CardDescription>Projected revenue under different growth scenarios.</CardDescription>
-            </div>
-            <ThreadPopover comments={mockComments}>
-                <Button variant="ghost" size="icon" aria-label="View Comments" className="no-drag">
-                    <MessageSquare className="h-5 w-5 text-muted-foreground" />
-                </Button>
-            </ThreadPopover>
-        </div>
-      </CardHeader>
-      <CardContent className="flex-1 pb-4 min-h-0">
-        <ReactECharts
-            option={getOption(data)}
-            style={{ height: '100%', width: '100%' }}
-        />
-      </CardContent>
-    </Card>
+    <>
+      <Card className="shadow-sm flex flex-col h-full">
+        <CardHeader>
+          <div className="flex justify-between items-start">
+              <div className="no-drag">
+                {isRenaming ? (
+                  <Input
+                    ref={inputRef}
+                    value={draftName}
+                    onChange={(e) => setDraftName(e.target.value)}
+                    onBlur={handleNameBlur}
+                    onKeyDown={handleNameKeyDown}
+                    className="text-lg h-8 py-0"
+                  />
+                ) : (
+                  <CardTitle onDoubleClick={handleNameDoubleClick} className="text-lg cursor-pointer">
+                    {artifactName}
+                  </CardTitle>
+                )}
+                <CardDescription>Projected revenue under different growth scenarios.</CardDescription>
+              </div>
+              <div className="flex items-center no-drag">
+                  <TooltipProvider>
+                      <Tooltip>
+                          <TooltipTrigger asChild>
+                              <Button variant="ghost" size="icon" aria-label="View Context" onClick={() => setIsContextOpen(true)}>
+                                  <Info className="h-5 w-5 text-muted-foreground" />
+                              </Button>
+                          </TooltipTrigger>
+                          <TooltipContent><p>Show Context</p></TooltipContent>
+                      </Tooltip>
+                  </TooltipProvider>
+                  <ThreadPopover comments={mockComments}>
+                      <Button variant="ghost" size="icon" aria-label="View Comments" className="no-drag">
+                          <MessageSquare className="h-5 w-5 text-muted-foreground" />
+                      </Button>
+                  </ThreadPopover>
+              </div>
+          </div>
+        </CardHeader>
+        <CardContent className="flex-1 pb-4 min-h-0">
+          <ReactECharts
+              option={getOption(data)}
+              style={{ height: '100%', width: '100%' }}
+          />
+        </CardContent>
+      </Card>
+      <ArtifactContextDialog
+        isOpen={isContextOpen}
+        onClose={() => setIsContextOpen(false)}
+        context={context}
+      />
+    </>
   );
 }

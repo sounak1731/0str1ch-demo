@@ -5,11 +5,13 @@ import { useMemo, useState, useRef, useEffect } from "react";
 import type { Sale, Comment } from "@/lib/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Info } from "lucide-react";
 import ReactECharts from 'echarts-for-react';
 import { ThreadPopover } from "./ThreadPopover";
 import { Button } from "../ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ArtifactContextDialog } from "./ArtifactContextDialog";
 
 
 interface ChartWidgetProps {
@@ -28,6 +30,7 @@ export function ChartWidget({ data, previousData, artifactName, onRename }: Char
   const [isRenaming, setIsRenaming] = useState(false);
   const [draftName, setDraftName] = useState(artifactName);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [isContextOpen, setIsContextOpen] = useState(false);
   
   const handleNameDoubleClick = () => setIsRenaming(true);
 
@@ -45,6 +48,18 @@ export function ChartWidget({ data, previousData, artifactName, onRename }: Char
       setDraftName(artifactName);
       setIsRenaming(false);
     }
+  };
+
+  const context = {
+    title: `Context for ${artifactName}`,
+    dataSource: "@spreadsheet-sales-data",
+    aiAction: "Grouped data by region and summed the revenue for each. Visualized the result as a bar chart.",
+    generatedQuery: `SELECT
+  region,
+  SUM(revenue) as total_revenue
+FROM @spreadsheet-sales-data
+GROUP BY region
+ORDER BY total_revenue DESC;`,
   };
 
   useEffect(() => {
@@ -120,51 +135,70 @@ export function ChartWidget({ data, previousData, artifactName, onRename }: Char
   );
 
   return (
-    <Card className="shadow-sm flex flex-col h-full">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div className="no-drag">
-            {isRenaming ? (
-              <Input
-                ref={inputRef}
-                value={draftName}
-                onChange={(e) => setDraftName(e.target.value)}
-                onBlur={handleNameBlur}
-                onKeyDown={handleNameKeyDown}
-                className="text-lg h-8 py-0"
-              />
-            ) : (
-              <CardTitle onDoubleClick={handleNameDoubleClick} className="text-lg cursor-pointer">
-                {artifactName}
-              </CardTitle>
-            )}
-            <CardDescription>Total sales revenue for each region.</CardDescription>
+    <>
+      <Card className="shadow-sm flex flex-col h-full">
+        <CardHeader>
+          <div className="flex justify-between items-start">
+            <div className="no-drag">
+              {isRenaming ? (
+                <Input
+                  ref={inputRef}
+                  value={draftName}
+                  onChange={(e) => setDraftName(e.target.value)}
+                  onBlur={handleNameBlur}
+                  onKeyDown={handleNameKeyDown}
+                  className="text-lg h-8 py-0"
+                />
+              ) : (
+                <CardTitle onDoubleClick={handleNameDoubleClick} className="text-lg cursor-pointer">
+                  {artifactName}
+                </CardTitle>
+              )}
+              <CardDescription>Total sales revenue for each region.</CardDescription>
+            </div>
+            <div className="flex items-center no-drag">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" aria-label="View Context" onClick={() => setIsContextOpen(true)}>
+                      <Info className="h-5 w-5 text-muted-foreground" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent><p>Show Context</p></TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+              <ThreadPopover comments={mockComments}>
+                <Button variant="ghost" size="icon" aria-label="View Comments" className="no-drag">
+                    <MessageSquare className="h-5 w-5 text-muted-foreground" />
+                </Button>
+              </ThreadPopover>
+            </div>
           </div>
-          <ThreadPopover comments={mockComments}>
-             <Button variant="ghost" size="icon" aria-label="View Comments" className="no-drag">
-                <MessageSquare className="h-5 w-5 text-muted-foreground" />
-             </Button>
-          </ThreadPopover>
-        </div>
-      </CardHeader>
-      <CardContent className="flex-1 pb-4 min-h-0">
-        {previousData ? (
-          <Tabs defaultValue="current" className="w-full h-full flex flex-col no-drag">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="current">Current</TabsTrigger>
-              <TabsTrigger value="previous">Previous</TabsTrigger>
-            </TabsList>
-            <TabsContent value="current" className="flex-1 mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-              {renderChart(currentChartData)}
-            </TabsContent>
-            <TabsContent value="previous" className="flex-1 mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
-              {renderChart(previousChartData)}
-            </TabsContent>
-          </Tabs>
-        ) : (
-          renderChart(currentChartData)
-        )}
-      </CardContent>
-    </Card>
+        </CardHeader>
+        <CardContent className="flex-1 pb-4 min-h-0">
+          {previousData ? (
+            <Tabs defaultValue="current" className="w-full h-full flex flex-col no-drag">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="current">Current</TabsTrigger>
+                <TabsTrigger value="previous">Previous</TabsTrigger>
+              </TabsList>
+              <TabsContent value="current" className="flex-1 mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                {renderChart(currentChartData)}
+              </TabsContent>
+              <TabsContent value="previous" className="flex-1 mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                {renderChart(previousChartData)}
+              </TabsContent>
+            </Tabs>
+          ) : (
+            renderChart(currentChartData)
+          )}
+        </CardContent>
+      </Card>
+      <ArtifactContextDialog
+        isOpen={isContextOpen}
+        onClose={() => setIsContextOpen(false)}
+        context={context}
+      />
+    </>
   );
 }
