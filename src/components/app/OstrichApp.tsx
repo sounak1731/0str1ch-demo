@@ -224,51 +224,64 @@ export default function OstrichApp({
 
   const handleAnalyze = async (query: string, history: ChatMessage[]): Promise<ChatMessage> => {
     setIsLoading(prev => ({ ...prev, analyze: true }));
-    await new Promise(resolve => setTimeout(resolve, 1200)); 
     
-    const lowerCaseQuery = query.toLowerCase();
     let aiResponseText = "I'm not quite sure how to do that. Could you try asking in a different way?";
 
     try {
-        if (lowerCaseQuery.includes('clean it up')) {
-            addArtifactsToLayout(['spreadsheet']);
-            aiResponseText = "Done. I've cleaned up the data, standardized the names, and added it to a spreadsheet on your canvas.";
-        } else if (lowerCaseQuery.includes('kpi cards')) {
-            addArtifactsToLayout(['kpi-revenue', 'kpi-sales', 'kpi-avg-sale']);
-            aiResponseText = "I've added KPI cards for Total Revenue, Total Sales, and Average Sale Value to your canvas.";
-        } else if (lowerCaseQuery.includes('chart showing revenue by region')) {
-            addArtifactsToLayout(['chart']);
-            aiResponseText = "I've added the Revenue by Region chart to your canvas.";
-        } else if (lowerCaseQuery.includes('pivot table')) {
-            addArtifactsToLayout(['pivot-table']);
-            aiResponseText = "Certainly. I've added a pivot table summarizing revenue by product and region.";
-        } else if (lowerCaseQuery.includes('filter the data to show only')) {
-            setPreviousFilteredSalesData(filteredSalesData);
-            const filtered = salesData.filter(s => s.region.toLowerCase().trim().startsWith('north') || s.region.toLowerCase().trim().startsWith('east'));
-            setFilteredSalesData(filtered);
-            aiResponseText = "Okay, I've filtered the data to show only the North and East regions. I've also enabled versioning on the chart so you can compare.";
-        } else if (lowerCaseQuery.includes('conditional formatting')) {
-            setHighlightHighRevenue(true);
-            aiResponseText = "I've applied conditional formatting to the spreadsheet to highlight all revenue values above $17,000.";
-        } else if (lowerCaseQuery.includes('what if we increased marketing spend')) {
-            addArtifactsToLayout(['what-if']);
-            aiResponseText = "Interesting question. I've run a simulation and added a What-If analysis chart to your canvas.";
-        } else if (lowerCaseQuery.includes('which variant performed better')) {
-            addArtifactsToLayout(['ab-test']);
-            aiResponseText = "I've analyzed the results and added an A/B Test report. Variant B is the clear winner.";
-        } else if (lowerCaseQuery.includes('automated workflow')) {
-            addArtifactsToLayout(['salesforce-pipeline']);
-            aiResponseText = "I've created an agentic workflow to sync this data with Salesforce and added it to the canvas. You can click on any node to configure it.";
-        } else {
-             const result = await fetch('/api/analyze', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ query, history, salesData: JSON.stringify(salesData) }),
+      const lowerCaseQuery = query.toLowerCase();
+
+      if (lowerCaseQuery.includes('clean it up')) {
+          await new Promise(resolve => setTimeout(resolve, 1200)); 
+          addArtifactsToLayout(['spreadsheet']);
+          aiResponseText = "Done. I've cleaned up the data, standardized the names, and added it to a spreadsheet on your canvas.";
+      } else if (lowerCaseQuery.includes('kpi cards')) {
+          await new Promise(resolve => setTimeout(resolve, 800)); 
+          addArtifactsToLayout(['kpi-revenue', 'kpi-sales', 'kpi-avg-sale']);
+          aiResponseText = "I've added KPI cards for Total Revenue, Total Sales, and Average Sale Value to your canvas.";
+      } else if (lowerCaseQuery.includes('chart showing revenue by region')) {
+          await new Promise(resolve => setTimeout(resolve, 1000)); 
+          addArtifactsToLayout(['chart']);
+          aiResponseText = "I've added the Revenue by Region chart to your canvas.";
+      } else if (lowerCaseQuery.includes('pivot table')) {
+          await new Promise(resolve => setTimeout(resolve, 1100)); 
+          addArtifactsToLayout(['pivot-table']);
+          aiResponseText = "Certainly. I've added a pivot table summarizing revenue by product and region.";
+      } else if (lowerCaseQuery.includes('filter the data to show only')) {
+          await new Promise(resolve => setTimeout(resolve, 500)); 
+          setPreviousFilteredSalesData(filteredSalesData);
+          const filtered = salesData.filter(s => s.region.toLowerCase().trim().startsWith('north') || s.region.toLowerCase().trim().startsWith('east'));
+          setFilteredSalesData(filtered);
+          aiResponseText = "Okay, I've filtered the data to show only the North and East regions. I've also enabled versioning on the chart so you can compare.";
+      } else if (lowerCaseQuery.includes('conditional formatting')) {
+          await new Promise(resolve => setTimeout(resolve, 400)); 
+          setHighlightHighRevenue(true);
+          aiResponseText = "I've applied conditional formatting to the spreadsheet to highlight all revenue values above $17,000.";
+      } else if (lowerCaseQuery.includes('what if we increased marketing spend')) {
+          await new Promise(resolve => setTimeout(resolve, 1300)); 
+          addArtifactsToLayout(['what-if']);
+          aiResponseText = "Interesting question. I've run a simulation and added a What-If analysis chart to your canvas.";
+      } else if (lowerCaseQuery.includes('which variant performed better')) {
+          await new Promise(resolve => setTimeout(resolve, 900)); 
+          addArtifactsToLayout(['ab-test']);
+          aiResponseText = "I've analyzed the results and added an A/B Test report. Variant B is the clear winner.";
+      } else if (lowerCaseQuery.includes('automated workflow')) {
+          await new Promise(resolve => setTimeout(resolve, 1400)); 
+          addArtifactsToLayout(['salesforce-pipeline']);
+          aiResponseText = "I've created an agentic workflow to sync this data with Salesforce and added it to the canvas. You can click on any node to configure it.";
+      } else {
+            const response = await fetch('/api/analyze', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                query,
+                history,
+                salesData: JSON.stringify(filteredSalesData), // Use filtered data for context
+              }),
             });
-            if (!result.ok) throw new Error('API Error');
-            const data = await result.json();
+            if (!response.ok) throw new Error('API Error');
+            const data = await response.json();
             aiResponseText = data.summary;
-        }
+      }
 
     } catch (error) {
         aiResponseText = "Sorry, I encountered an error. Please try again.";
@@ -565,7 +578,7 @@ export default function OstrichApp({
                 }
                 if (i === "spreadsheet") {
                   return (
-                    <div key="spreadsheet">
+                    <div key="spreadsheet" className="h-full w-full">
                       <SpreadsheetCanvas
                         artifactName={artifactNames.spreadsheet}
                         onRename={(newName) => handleRenameArtifact('spreadsheet', newName)}
